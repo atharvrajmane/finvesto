@@ -19,7 +19,6 @@
 | Technology            | Purpose/Role                           |
 |------------------------|----------------------------------------|
 | **React JS**           | Frontend framework                     |
-| **React Router DOM**   | SPA routing                            |
 | **Axios**              | HTTP requests                          |
 | **Vite**               | Frontend build tool                    |
 | **Material UI (MUI)**  | Modern React UI components             |
