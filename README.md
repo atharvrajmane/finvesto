@@ -16,28 +16,35 @@
 
 ## 🛠️ Tech Stack
 
-| Technology   | Role                  |
-|--------------|------------------------|
-| React JS     | Frontend framework     |
-| Bootstrap    | Responsive styling     |
-| Plain CSS    | Custom styles          |
-| JavaScript   | Application logic      |
+| Technology            | Purpose/Role                           |
+|------------------------|----------------------------------------|
+| **React JS**           | Frontend framework                     |
+| **React Router DOM**   | SPA routing                            |
+| **Axios**              | HTTP requests                          |
+| **Vite**               | Frontend build tool                    |
+| **Material UI (MUI)**  | Modern React UI components             |
+| **Emotion**            | Styling library used with MUI          |
+| **Bootstrap**          | Legacy styling                       |
+| **Node.js**            | JavaScript runtime for backend         |
+| **Express.js**         | Backend framework                      |
+| **MongoDB**            | NoSQL database                         |
+| **CORS**               | Cross-origin handling                  |
 
 ---
 
 ## 📁 Folder Structure
-
-Finvesto/
+```bash
+Finvesto/  
 ├── frontend/
-│ ├── public/
-│ ├── src/
-│ │ ├── components/
-│ │ ├── pages/
-│ │ └── App.js
-│ └── package.json
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   └── App.js
+│   └── package.json
 ├── README.md
 └── .gitignore
-
+```
 ---
 
 ## 🧑‍💻 Author
@@ -47,11 +54,6 @@ Finvesto/
 
 ---
 
-## 📌 Notes
-
-This project is for educational and portfolio purposes.
-
----
 
 ## ⭐️ Show your support
 
