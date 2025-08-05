@@ -1,0 +1,14 @@
+body {
+    font-family: 'Inter', serif;
+}
+  
+
+.nav-link {
+    margin-left: 40px;
+    font-size: 14px;
+}
+
+.innertext {
+    font-size: 75%;
+    line-height: 1.9;
+}
