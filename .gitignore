@@ -1,0 +1,73 @@
+# .gitignore for Finvesto Monorepo
+
+# -------------------------------------------------------------------
+# General / OS / IDE
+# Ignore operating system and IDE-specific files.
+# -------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# -------------------------------------------------------------------
+# Node.js / Backend (`/backend/`)
+# Ignores for your Express API server.
+# -------------------------------------------------------------------
+
+# Dependencies
+/backend/node_modules/
+
+# Environment variables - VERY IMPORTANT FOR SECURITY
+/backend/.env
+
+# Log files
+/backend/*.log
+/backend/npm-debug.log*
+
+# Build output (if you ever compile TypeScript or bundle the backend)
+/backend/dist/
+/backend/build/
+
+# -------------------------------------------------------------------
+# React / Vite Apps (`/frontend-landing/` and `/frontend-app/`)
+# Ignores for both of your React frontend applications.
+# -------------------------------------------------------------------
+
+# Dependencies
+/frontend-landing/node_modules/
+/frontend-app/node_modules/
+# If your kite app folder is named 'kite', use this instead:
+# /kite/node_modules/
+
+# Environment variables - Keep all local variables out of Git
+/frontend-landing/.env*
+/frontend-app/.env*
+# If your kite app folder is named 'kite', use this instead:
+# /kite/.env*
+
+# Build output (Vite uses 'dist', Create React App uses 'build')
+/frontend-landing/dist/
+/frontend-landing/build/
+/frontend-app/dist/
+/frontend-app/build/
+# If your kite app folder is named 'kite', use this instead:
+# /kite/dist/
+# /kite/build/
+
+# Vite-specific cache
+/frontend-landing/.vite/
+/frontend-app/.vite/
+# If your kite app folder is named 'kite', use this instead:
+# /kite/.vite/
+
+# Test coverage reports
+/frontend-landing/coverage/
+/frontend-app/coverage/
+# If your kite app folder is named 'kite', use this instead:
+# /kite/coverage/
+
+# Log files
+/frontend-landing/*.log
+/frontend-app/*.log
+# If your kite app folder is named 'kite', use this instead:
+# /kite/*.log
