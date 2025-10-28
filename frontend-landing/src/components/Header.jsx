@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
   const kiteAppUrl =
-    import.meta.env.VITE_KITE_APP_URL || "http://localhost:5174";
+    import.meta.env.VITE_KITE_APP_URL || "http://localhost:5173";
 
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">

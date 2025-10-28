@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function Hero() {
-    const kiteAppUrl = import.meta.env.VITE_KITE_APP_URL || "http://localhost:5174";
+    const kiteAppUrl = import.meta.env.VITE_KITE_APP_URL || "http://localhost:5173";
 
     return (
         <section className="bg-gradient-to-b from-slate-900 to-slate-800 text-white py-20 md:py-32">

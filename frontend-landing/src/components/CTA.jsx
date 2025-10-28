@@ -2,7 +2,7 @@ import React from "react";
 
 export default function CTA() {
   const kiteAppUrl =
-    import.meta.env.VITE_KITE_APP_URL || "http://localhost:5174";
+    import.meta.env.VITE_KITE_APP_URL || "http://localhost:5173";
 
   return (
     <section className="bg-slate-800 text-white">

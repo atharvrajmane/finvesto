@@ -1,11 +1,19 @@
 const mongoose = require("mongoose");
-const Schema=mongoose.Schema;
 
-const WatchListSchema=new Schema({
-    name: String,
-    price: Number,
-    percent: String,
-    isDown: Boolean,
+const watchlistSchema = new mongoose.Schema({
+  stockName: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
-module.exports=mongoose.model("watchlist",WatchListSchema);
+watchlistSchema.index({ userId: 1, stockName: 1 }, { unique: true });
+
+const WatchlistModel = mongoose.model("Watchlist", watchlistSchema);
+
+module.exports = { WatchlistModel };
