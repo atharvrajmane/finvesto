@@ -19,28 +19,38 @@ exports.placeBuyOrder = async (req, res) => {
     const orderData = new OrdersModel({ ...req.body, userId });
     const savedOrder = await orderData.save();
 
+    const existing = await HoldingsModel.findOne({ name: stockName, userId });
+
+    let updatedAvg = AveragePrice; 
+    if (existing) {
+      const totalQty = existing.qty + Number(qty);
+      updatedAvg = ((existing.avg * existing.qty) + (AveragePrice * qty)) / totalQty;
+      updatedAvg = Number(updatedAvg.toFixed(2));
+    }
+
     await HoldingsModel.findOneAndUpdate(
-      { name: stockName, userId: userId },
+      { name: stockName, userId },
       {
-        $inc: { qty: Number(qty) },
+        $inc: { qty: Number(qty) },  
         $set: {
           name: stockName,
           price: AveragePrice,
-          avg: AveragePrice, 
+          avg: updatedAvg,            
         },
-        $setOnInsert: { userId: userId } 
+        $setOnInsert: { userId }
       },
       { upsert: true, new: true }
     );
 
     const cost = Number(qty) * Number(AveragePrice);
-    await fundsModel.updateOne({ userId: userId }, { $inc: { fundsAvilable: -cost } });
+    await fundsModel.updateOne({ userId }, { $inc: { fundsAvilable: -cost } });
 
     res.status(201).json({ message: "Buy order placed successfully!", data: savedOrder });
   } catch (error) {
     res.status(500).json({ message: "Error placing buy order", error: error.message });
   }
 };
+
 
 exports.placeSellOrder = async (req, res) => {
   try {
