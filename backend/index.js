@@ -35,14 +35,12 @@ mongoose
 
 // --- Route Imports ---
 const holdingRoutes = require('./Routes/holdingRoutes.js');
-const positionRoutes = require('./Routes/positionRoutes.js');
 const orderRoutes = require('./Routes/orderRoutes.js');
 const watchlistRoutes = require('./Routes/watchlistRoutes.js');
 const fundRoutes = require('./Routes/fundRoutes.js');
 
 // --- API Routes ---
 app.use("/api/holdings", holdingRoutes);
-app.use("/api/positions", positionRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/funds", fundRoutes);
