@@ -1,4 +1,4 @@
-const { WatchlistModel } = require("../models/WatchlistModel");
+const { WatchlistModel } = require("../models/WatchListModel");
 
 const asyncWrapper = require("../utils/asyncWrapper");
 const AppError = require("../utils/AppError");
