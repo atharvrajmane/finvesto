@@ -1,45 +1,59 @@
-const { WatchlistModel } = require("../models/WatchlistModel.js");
+const { WatchlistModel } = require("../models/WatchlistModel");
 
-exports.getWatchlist = async (req, res) => {
-  try {
-    const watchlist = await WatchlistModel.find({ userId: req.user._id });
-    res.status(200).json(watchlist);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching watchlist", error: error.message });
+const asyncWrapper = require("../utils/asyncWrapper");
+const AppError = require("../utils/AppError");
+const { success } = require("../utils/response");
+
+/**
+ * @desc    Get watchlist for logged-in user
+ * @route   GET /api/watchlist
+ * @access  Private
+ */
+exports.getWatchlist = asyncWrapper(async (req, res) => {
+  const watchlist = await WatchlistModel.find({ userId: req.user._id });
+  return success(res, watchlist, "Watchlist fetched successfully");
+});
+
+/**
+ * @desc    Add stock to watchlist
+ * @route   POST /api/watchlist
+ * @access  Private
+ */
+exports.addStockToWatchlist = asyncWrapper(async (req, res) => {
+  const { stockName } = req.body;
+  const userId = req.user._id;
+
+  if (!stockName) {
+    throw new AppError("Stock name is required", 400);
   }
-};
 
-exports.addStockToWatchlist = async (req, res) => {
-  try {
-    const { stockName } = req.body;
-    const userId = req.user._id;
+  const newStock = new WatchlistModel({ stockName, userId });
+  const savedStock = await newStock.save();
 
-    const newStock = new WatchlistModel({ stockName, userId });
-    const savedStock = await newStock.save();
-    res.status(201).json({ message: "Stock added to watchlist", data: savedStock });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Stock is already in your watchlist." });
-    }
-    res.status(500).json({ message: "Error adding stock to watchlist", error: error.message });
+  return success(res, savedStock, "Stock added to watchlist", 201);
+});
+
+/**
+ * @desc    Remove stock from watchlist
+ * @route   DELETE /api/watchlist
+ * @access  Private
+ */
+exports.deleteStockFromWatchlist = asyncWrapper(async (req, res) => {
+  const { stockName } = req.body;
+  const userId = req.user._id;
+
+  if (!stockName) {
+    throw new AppError("Stock name is required", 400);
   }
-};
 
-exports.deleteStockFromWatchlist = async (req, res) => {
-  try {
-    const { stockName } = req.body;
-    const userId = req.user._id;
+  const deletedStock = await WatchlistModel.findOneAndDelete({
+    stockName: stockName,
+    userId: userId,
+  });
 
-    const deletedStock = await WatchlistModel.findOneAndDelete({
-      stockName: stockName,
-      userId: userId,
-    });
-
-    if (!deletedStock) {
-      return res.status(404).json({ message: "Stock not found in your watchlist" });
-    }
-    res.status(200).json({ message: "Stock removed from watchlist", data: deletedStock });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting stock from watchlist", error: error.message });
+  if (!deletedStock) {
+    throw new AppError("Stock not found in your watchlist", 404);
   }
-};
+
+  return success(res, deletedStock, "Stock removed from watchlist");
+});

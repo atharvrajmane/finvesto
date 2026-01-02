@@ -1,58 +1,93 @@
-import { useState } from "react"
-import "./Menu.css"
-import { Link } from "react-router-dom"
+import "./Menu.css";
+import { NavLink } from "react-router-dom";
+
 export default function Menu() {
+  return (
+    <div className="container-fluid m-1 d-flex justify-content-between">
+      <div className="kiteogo">
+        <img
+          src="https://kite.zerodha.com/static/images/kite-logo.svg"
+          className="img-fluid kiteLogo mt-2"
+          alt="Kite Logo"
+        />
+      </div>
 
-    const [selectedMenu,setSelectedMenu] = useState(0);
-    const [isProfileDropDownOpen,setIsProfileDropDownPpen] = useState(false);
+      <div className="menubar">
+        <nav className="navbar navbar-expand-lg">
+          <div className="container-fluid">
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
 
-    let handleMenuClick = (index)=>{
-        setSelectedMenu(index);
-    }
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav">
+                <li className="nav-item">
+                  <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active highlightElement" : "nav-link"
+                    }
+                  >
+                    Dashboard
+                  </NavLink>
+                </li>
 
-    let handleProfileClick = ()=>{
-        setIsProfileDropDownPpen(!isProfileDropDownOpen);
-    }
+                <li className="nav-item">
+                  <NavLink
+                    to="/orders"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active highlightElement" : "nav-link"
+                    }
+                  >
+                    Orders
+                  </NavLink>
+                </li>
 
+                <li className="nav-item">
+                  <NavLink
+                    to="/holdings"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active highlightElement" : "nav-link"
+                    }
+                  >
+                    Holdings
+                  </NavLink>
+                </li>
 
+                <li className="nav-item">
+                  <NavLink
+                    to="/funds"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active highlightElement" : "nav-link"
+                    }
+                  >
+                    Funds
+                  </NavLink>
+                </li>
 
-    return (
-        <div className="container-fluid m-1 d-flex justify-content-between">
-            <div className="kiteogo">
-                <img src="https://kite.zerodha.com/static/images/kite-logo.svg" className="img-fluid kiteLogo mt-2" alt="" />
+                <li className="nav-item">
+                  <NavLink
+                    to="/charts"
+                    className={({ isActive }) =>
+                      isActive ? "nav-link active highlightElement" : "nav-link"
+                    }
+                  >
+                    Charts
+                  </NavLink>
+                </li>
+              </ul>
             </div>
-            <div className="menubar">
-                <nav className="navbar navbar-expand-lg">
-                    <div className="container-fluid">
-                        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                            <span className="navbar-toggler-icon"></span>
-                        </button>
-                        <div className="collapse navbar-collapse" id="navbarNav">
-                            <ul className="navbar-nav">
-                                <li className="nav-item">
-                                    <Link className={(selectedMenu === 0)?"nav-link active highlightElement":"nav-link active"} aria-current="page" to="/" onClick={()=>handleMenuClick(0)}>Dashboard</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className={(selectedMenu === 1)?"nav-link active highlightElement":"nav-link active"} to="/orders" onClick={()=>handleMenuClick(1)}>Orders</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link className={(selectedMenu === 2)?"nav-link active highlightElement":"nav-link active"} to="/holdings" onClick={()=>handleMenuClick(2)}>Holdings</Link>
-                                </li>
-                                {/* <li className="nav-item">
-                                    <Link className={(selectedMenu === 3)?"nav-link active highlightElement":"nav-link active"} to="/positions" onClick={()=>handleMenuClick(3)}>Positions</Link>
-                                </li> */}
-                                <li className="nav-item">
-                                    <Link className={(selectedMenu === 4)?"nav-link active highlightElement":"nav-link active"} to="/funds" onClick={()=>handleMenuClick(4)}>Funds</Link>
-                                </li>
-                                <li className="nav-item">
-                                <Link className={(selectedMenu === 5)?"nav-link active highlightElement":"nav-link active"} to="/charts" onClick={()=>handleMenuClick(5)}>Charts</Link>
-                                </li>
-
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-        </div>
-    )
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
 }

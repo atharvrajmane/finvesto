@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const passport = require('passport');
 
 const authRoutes = require('./Routes/authRoutes');
+const errorHandler = require('./utils/errorHandler');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -20,9 +21,16 @@ require('./config/passport-config.js');
 app.use("/api/auth", authRoutes);
 
 // --- Database Connection ---
-mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("MongoDB connected successfully."))
-    .catch(err => console.error("MongoDB connection error:", err));
+mongoose
+  .connect(process.env.MONGO_URL)
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    console.log("📦 DB Name:", mongoose.connection.name);
+    console.log("🌍 Host:", mongoose.connection.host);
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+  });
 
 // --- Route Imports ---
 const holdingRoutes = require('./Routes/holdingRoutes.js');
@@ -40,6 +48,8 @@ app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/funds", fundRoutes);
 
 app.use("/api/init", initRoutes);
+
+app.use(errorHandler);
 
 app.listen(port, () => {
     console.log(`Finvesto server running on http://localhost:${port}`);

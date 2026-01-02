@@ -13,18 +13,19 @@ export default function WatchListComponent({ stock, refreshWatchlist }) {
     const interval = setInterval(() => { // Gave the interval a variable name for potential cleanup
       async function updateHoldings() {
         // 2. CHANGED: Use apiClient for the GET request
-        let responses = await apiClient.get("/holdings");
-        responses = responses.data;
-        if (responses) {
-          for (let response of responses) {
-            let newData = getLtp(response.name);
-            // 3. CHANGED: Use apiClient for the POST request
-            await apiClient.post("/holdings/update", {
-              name: response.name,
-              price: newData.randomNumber,
-              net: String(newData.percentageDifference + "%"),
-            });
-          }
+        let response = await apiClient.get("/holdings");
+
+        // NEW response format handling
+        const holdings = response?.data?.data || [];
+
+        for (let holding of holdings) {
+          let newData = getLtp(holding.name);
+
+          await apiClient.post("/holdings/update", {
+            name: holding.name,
+            price: newData.randomNumber,
+            net: String(newData.percentageDifference + "%"),
+          });
         }
       }
       updateHoldings();

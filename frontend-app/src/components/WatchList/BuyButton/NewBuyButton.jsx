@@ -1,92 +1,144 @@
 import React, { useState, useEffect, forwardRef } from "react";
-import { Button, Snackbar, Modal, Box } from "@mui/material";
+import { Button, Snackbar, Modal, Box, CircularProgress } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import apiClient from "../../../api/apiClient";
 
 const NewBuyButton = forwardRef(({ stock }, ref) => {
-  const [qty, setQty] = useState();
+  // keep initial types similar to original (qty controlled)
+  const [qty, setQty] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  let [message, setMessage] = useState("Place a valid Order");
-  let [errorType, setErrorType] = useState("success");
+  const [message, setMessage] = useState("Place a valid Order");
+  const [errorType, setErrorType] = useState("success");
   const [currentFunds, setCurrentFunds] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  async function executeBuyOrdder(stock) {
-    //Insert into order db
-    let orderData = {
-      orderType: "BUY",
-      stockName: stock.stockSymbol,
-      qty: qty,
-      AveragePrice: stock.randomNumber,
-    };
-    // 2. CHANGED: Use apiClient for the POST request
-    let postResult = await apiClient.post(
-      "/orders/buy",
-      orderData
-    );
+  // helper - safe number
+  const toNumberSafe = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // fetch funds once on mount (use original function name flow)
+  async function getCurrentFunds() {
+    try {
+      const res = await apiClient.get("/funds");
+      // backend uses envelope { success, message, data }
+      const payload = res?.data?.data;
+      const val = Number(payload?.fundsAvilable ?? 0);
+      setCurrentFunds(Number.isFinite(val) ? val : 0);
+    } catch (err) {
+      console.error("getCurrentFunds error:", err);
+      setCurrentFunds(0);
+    }
   }
 
   useEffect(() => {
-    async function getCurrentFunds() {
-      // 3. CHANGED: Use apiClient for the GET request
-      let funds = await apiClient.get("/funds");
-      setCurrentFunds(funds.data.fundsAvilable);
-    }
     getCurrentFunds();
-    // CRITICAL BUG FIX: Added [] to prevent this from running on every re-render.
-    // Without this, typing a single character in the quantity box would re-fetch the funds.
-  }, []); 
+    // run only once, like your original code's intention
+  }, []);
 
+  // preserve original executeBuyOrdder name but implement properly
+  async function executeBuyOrdder(stock) {
+    const numericQty = Number(qty);
+    const payload = {
+      orderType: "BUY",
+      stockName: stock.stockSymbol ?? stock.name,
+      qty: numericQty,
+      AveragePrice: Number(stock.randomNumber),
+    };
+    const res = await apiClient.post("/orders/buy", payload);
+    return res?.data;
+  }
+
+  // original handleQty behaviour, but allow clearing input and numeric-only
   let handleQty = (e) => {
-    if (
-      e.target.value >= 0 &&
-      e.target.value <= Math.floor(Number(currentFunds / stock.randomNumber))
-    ) {
-      setQty(e.target.value);
+    const raw = e.target.value;
+    if (raw === "") {
+      setQty("");
+      return;
+    }
+    // allow only digits and no leading plus/minus/decimal
+    if (!/^\d+$/.test(raw)) return;
+
+    const numeric = Number(raw);
+    const max = Math.floor(Number(currentFunds / stock.randomNumber) || 0);
+    // keep same validation behavior as original but don't block user from typing a number slightly over max:
+    if (numeric >= 0 && numeric <= max) {
+      setQty(raw);
+    } else {
+      // if it's greater than max, do not update (to match original strictness)
+      // this keeps the user from entering an invalid qty
     }
   };
 
   const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
+    if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
-  const handleModalOpen = () => {
-    setModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setModalOpen(false);
-  };
+  const handleModalOpen = () => setModalOpen(true);
+  const handleModalClose = () => setModalOpen(false);
 
   const handleButtonClick = async () => {
-    if (qty == 0) {
+    const numericQty = Number(qty);
+    const maxQty = Math.floor(Number(currentFunds / stock.randomNumber) || 0);
+
+    if (!Number.isFinite(numericQty) || numericQty <= 0) {
       setMessage("Enter a valid qunatity");
       setSnackbarOpen(true);
-      handleModalClose();
       setErrorType("error");
-    } else if (
-      qty > 0 &&
-      qty <= Math.floor(Number(currentFunds / stock.randomNumber))
-    ) {
-      executeBuyOrdder(stock);
-      setMessage(`Order Executed Successfully. Bought ${stock.name} x ${qty}.`);
-      setErrorType("success");
-      setSnackbarOpen(true);
       handleModalClose();
-      setQty(null);
-    } else {
+      return;
+    }
+
+    if (numericQty > maxQty) {
       setMessage("Enter a valid qunatity");
       setSnackbarOpen(true);
-      handleModalClose();
       setErrorType("error");
-      setQty(null);
+      handleModalClose();
+      setQty("");
+      return;
+    }
+
+    // valid path: call API and await result
+    setLoading(true);
+    try {
+      const data = await executeBuyOrdder(stock);
+      if (data?.success) {
+        // show server message if present else fallback
+        setMessage(data.message || `Order Executed Successfully. Bought ${stock.name} x ${numericQty}.`);
+        setErrorType("success");
+
+        // update funds from server if available, otherwise refetch
+        const newFunds = data?.data?.fundsAvilable;
+        if (typeof newFunds !== "undefined") setCurrentFunds(Number(newFunds));
+        else await getCurrentFunds();
+
+        setQty("");
+      } else {
+        // server returned success:false
+        setMessage(data?.message || "Order failed");
+        setErrorType("error");
+      }
+    } catch (err) {
+      console.error("executeBuyOrdder error:", err);
+      const serverMessage =
+        err?.response?.data?.message ||
+        (err?.response?.data?.errors ? err.response.data.errors.map((x) => x.msg).join(", ") : null) ||
+        err?.message ||
+        "Order failed";
+      setMessage(serverMessage);
+      setErrorType("error");
+    } finally {
+      setLoading(false);
+      setSnackbarOpen(true);
+      handleModalClose();
     }
   };
 
+  // preserve original look: button "B", modal Box width 500px etc.
   return (
     <div>
       <Button variant="contained" onClick={handleModalOpen}>
@@ -113,9 +165,7 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
               style={{ margin: "20px" }}
               value={qty}
               onChange={handleQty}
-              helperText={`Max Quantity = ${Math.floor(
-                Number(currentFunds / stock.randomNumber)
-              )}`}
+              helperText={`Max Quantity = ${Math.floor(Number(currentFunds / stock.randomNumber) || 0)}`}
             />
             <br />
             <TextField
@@ -141,8 +191,8 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
           </span>
           <br />
           <div className="d-flex  align-items-center justify-content-center mb-2 ">
-            <Button variant="contained" onClick={handleButtonClick}>
-              Buy {stock.stockSymbol}
+            <Button variant="contained" onClick={handleButtonClick} disabled={loading || !qty}>
+              {loading ? <CircularProgress size={18} color="inherit" /> : `Buy ${stock.stockSymbol}`}
             </Button>
           </div>
         </Box>

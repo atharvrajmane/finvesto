@@ -1,7 +1,13 @@
-const mongoose = require('mongoose'); // add if not already present
+// backend/Controllers/orderController.js
+
+const mongoose = require('mongoose');
 const { OrdersModel } = require("../models/OrdersModel.js");
 const { HoldingsModel } = require("../models/HoldingsModel.js");
 const { fundsModel } = require("../models/FundsModel.js");
+
+const asyncWrapper = require('../utils/asyncWrapper');
+const AppError = require('../utils/AppError');
+const { success } = require('../utils/response');
 
 // Helper
 function toNumber(v) {
@@ -9,17 +15,18 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-exports.getAllOrders = async (req, res) => {
-  try {
-    const allOrders = await OrdersModel.find({ userId: req.user._id }).sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, data: allOrders });
-  } catch (error) {
-    console.error('getAllOrders error:', error);
-    return res.status(500).json({ success: false, message: 'Error fetching orders', error: error.message });
-  }
-};
+/**
+ * GET /api/orders
+ */
+exports.getAllOrders = asyncWrapper(async (req, res) => {
+  const allOrders = await OrdersModel.find({ userId: req.user._id }).sort({ createdAt: -1 });
+  return success(res, allOrders, 'Orders fetched', 200);
+});
 
-exports.placeBuyOrder = async (req, res) => {
+/**
+ * POST /api/orders/buy
+ */
+exports.placeBuyOrder = asyncWrapper(async (req, res) => {
   const session = await mongoose.startSession();
   try {
     const { stockName, qty, AveragePrice } = req.body;
@@ -29,23 +36,24 @@ exports.placeBuyOrder = async (req, res) => {
     const price = toNumber(AveragePrice);
     const quantity = toNumber(qty);
     if (!stockName || typeof stockName !== 'string' || price <= 0 || quantity <= 0) {
-      return res.status(400).json({ success: false, message: 'Invalid input: stockName, qty and AveragePrice are required and must be positive.' });
+      throw new AppError('Invalid input: stockName, qty and AveragePrice are required and must be positive.', 422);
     }
 
     const cost = price * quantity;
 
-    // Pre-flight: check funds quickly to fail fast
+    // Pre-flight: check funds quickly to fail fast (no transaction yet)
     const fundsDoc = await fundsModel.findOne({ userId }).lean();
     if (!fundsDoc || (fundsDoc.fundsAvilable ?? 0) < cost) {
-      return res.status(400).json({ success: false, message: 'Insufficient funds' });
+      throw new AppError('Insufficient funds', 400);
     }
 
     // Start transaction
     session.startTransaction();
+    let savedOrder;
     try {
       // 1) create order inside session
       const orderData = new OrdersModel({ ...req.body, userId });
-      const savedOrder = await orderData.save({ session });
+      savedOrder = await orderData.save({ session });
 
       // 2) update or create holding inside session (read then write)
       const existing = await HoldingsModel.findOne({ name: stockName, userId }).session(session);
@@ -75,8 +83,6 @@ exports.placeBuyOrder = async (req, res) => {
       }
 
       // 3) atomically decrement funds inside transaction
-      // Use findOneAndUpdate with session; since we are inside a transaction, we don't strictly
-      // need the conditional filter here, but it's an extra safety check:
       const updatedFunds = await fundsModel.findOneAndUpdate(
         { userId, fundsAvilable: { $gte: cost } },
         { $inc: { fundsAvilable: -cost } },
@@ -85,29 +91,27 @@ exports.placeBuyOrder = async (req, res) => {
 
       if (!updatedFunds) {
         // Not enough funds at the moment of applying changes -> abort
-        throw new Error('Insufficient funds during transaction');
+        throw new AppError('Insufficient funds during transaction', 400);
       }
 
       await session.commitTransaction();
-      session.endSession();
-
-      return res.status(201).json({ success: true, message: 'Buy order placed successfully!', data: savedOrder });
+      return success(res, savedOrder, 'Buy order placed successfully!', 201);
     } catch (txErr) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('placeBuyOrder transaction aborted:', txErr);
-      return res.status(500).json({ success: false, message: 'Failed to place buy order', error: txErr.message });
+      // Abort transaction and rethrow a proper AppError
+      try { await session.abortTransaction(); } catch (e) { console.error('abortTransaction failed', e); }
+      // If txErr is AppError, rethrow as-is so middleware preserves statusCode
+      if (txErr instanceof AppError) throw txErr;
+      throw new AppError(txErr.message || 'Failed to place buy order', 500);
     }
-  } catch (err) {
-    console.error('placeBuyOrder error:', err);
-    // If session is still active, end it
-    try { session.endSession(); } catch (e) {}
-    return res.status(500).json({ success: false, message: 'Server error' });
+  } finally {
+    try { session.endSession(); } catch (e) { /* ignore */ }
   }
-};
+});
 
-
-exports.placeSellOrder = async (req, res) => {
+/**
+ * POST /api/orders/sell
+ */
+exports.placeSellOrder = asyncWrapper(async (req, res) => {
   const session = await mongoose.startSession();
   try {
     const { stockName, qty, AveragePrice } = req.body;
@@ -117,28 +121,29 @@ exports.placeSellOrder = async (req, res) => {
     const price = toNumber(AveragePrice);
     const quantity = toNumber(qty);
     if (!stockName || typeof stockName !== 'string' || price <= 0 || quantity <= 0) {
-      return res.status(400).json({ success: false, message: 'Invalid input: stockName, qty and AveragePrice are required and must be positive.' });
+      throw new AppError('Invalid input: stockName, qty and AveragePrice are required and must be positive.', 422);
     }
 
     // Pre-flight: ensure holding exists and has enough quantity
     const holding = await HoldingsModel.findOne({ name: stockName, userId }).lean();
     if (!holding || Number(holding.qty) < quantity) {
-      return res.status(400).json({ success: false, message: 'Insufficient quantity to sell.' });
+      throw new AppError('Insufficient quantity to sell.', 400);
     }
 
     const proceeds = price * quantity;
 
     // Start transaction
     session.startTransaction();
+    let savedOrder;
     try {
       // 1) create order inside session
       const orderData = new OrdersModel({ ...req.body, userId });
-      const savedOrder = await orderData.save({ session });
+      savedOrder = await orderData.save({ session });
 
       // 2) re-read holding inside session and update
       const holdingInside = await HoldingsModel.findOne({ name: stockName, userId }).session(session);
       if (!holdingInside || Number(holdingInside.qty) < quantity) {
-        throw new Error('Holding not found or insufficient qty inside transaction');
+        throw new AppError('Holding not found or insufficient qty inside transaction', 400);
       }
 
       const newQty = Number(holdingInside.qty) - quantity;
@@ -159,22 +164,17 @@ exports.placeSellOrder = async (req, res) => {
       );
 
       if (!updatedFunds) {
-        throw new Error('Funds document missing during sell transaction');
+        throw new AppError('Funds document missing during sell transaction', 500);
       }
 
       await session.commitTransaction();
-      session.endSession();
-
-      return res.status(201).json({ success: true, message: 'Sell order placed successfully!', data: savedOrder });
+      return success(res, savedOrder, 'Sell order placed successfully!', 201);
     } catch (txErr) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('placeSellOrder transaction aborted:', txErr);
-      return res.status(500).json({ success: false, message: 'Failed to place sell order', error: txErr.message });
+      try { await session.abortTransaction(); } catch (e) { console.error('abortTransaction failed', e); }
+      if (txErr instanceof AppError) throw txErr;
+      throw new AppError(txErr.message || 'Failed to place sell order', 500);
     }
-  } catch (err) {
-    console.error('placeSellOrder error:', err);
-    try { session.endSession(); } catch (e) {}
-    return res.status(500).json({ success: false, message: 'Server error' });
+  } finally {
+    try { session.endSession(); } catch (e) { /* ignore */ }
   }
-};
+});

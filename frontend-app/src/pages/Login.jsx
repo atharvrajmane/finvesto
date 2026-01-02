@@ -26,8 +26,17 @@ export default function Login() {
       const response = await apiClient.post("/auth/login", formData);
 
       if (response.data.token) {
-        localStorage.setItem("jwtToken", response.data.token);
-        navigate("/");
+        if (response.data.token) {
+          // Remove "Bearer " prefix
+          const rawToken = response.data.token.replace("Bearer ", "");
+        
+          // ✅ Store with correct keys
+          localStorage.setItem("token", rawToken);
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+          navigate("/");
+        }
+        
       }
     } catch (error) {
       setIsError(true);

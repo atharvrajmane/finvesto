@@ -1,38 +1,39 @@
+// backend/Controllers/fundController.js
 const { fundsModel } = require("../models/FundsModel.js");
+const asyncWrapper = require('../utils/asyncWrapper');
+const AppError = require('../utils/AppError');
+const { success } = require('../utils/response');
 
-exports.getFunds = async (req, res) => {
-  try {
-    const funds = await fundsModel.findOneAndUpdate(
-      { userId: req.user._id },
-      { $setOnInsert: { userId: req.user._id } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    res.status(200).json(funds);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching funds", error: error.message });
+exports.getFunds = asyncWrapper(async (req, res) => {
+  const userId = req.user._id;
+  // Ensure document exists (create if not)
+  const funds = await fundsModel.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  ).lean();
+
+  return success(res, funds, 'Funds fetched', 200);
+});
+
+exports.addFunds = asyncWrapper(async (req, res) => {
+  const userId = req.user._id;
+  // Accept either "funds" or "amount" as body field for compatibility
+  const amountRaw = req.body.funds ?? req.body.amount;
+  const amount = Number(amountRaw);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new AppError('Invalid funds amount. Provide a positive number in "funds" or "amount".', 422);
   }
-};
 
-exports.addFunds = async (req, res) => {
-  try {
-    const { funds } = req.body;
-    if (isNaN(funds) || funds <= 0) {
-      return res.status(400).json({ message: "Invalid funds amount." });
-    }
+  const updatedFunds = await fundsModel.findOneAndUpdate(
+    { userId },
+    {
+      $inc: { fundsAvilable: amount },
+      $setOnInsert: { userId }
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  ).lean();
 
-    const updatedFunds = await fundsModel.findOneAndUpdate(
-      { userId: req.user._id },
-      { 
-        $inc: { fundsAvilable: Number(funds) },
-        $setOnInsert: { userId: req.user._id }
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    res
-      .status(200)
-      .json({ message: "Funds added successfully", data: updatedFunds });
-  } catch (error) {
-    res.status(500).json({ message: "Error adding funds", error: error.message });
-  }
-};
-
+  return success(res, updatedFunds, 'Funds added successfully', 200);
+});

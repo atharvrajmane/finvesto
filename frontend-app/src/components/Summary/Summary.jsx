@@ -1,74 +1,87 @@
+// src/components/Summary/Summary.jsx
 import "./Summary.css";
 import { useState, useEffect } from "react";
-// 1. CHANGED: Import our authenticated apiClient instead of the default axios
-import apiClient from "../../api/apiClient"; // <-- MAKE SURE THIS PATH IS CORRECT
+import apiClient from "../../api/apiClient";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
 
 export default function Summary() {
-  const data = [
-    { label: "Group A", value: 400 },
-    { label: "Group B", value: 300 },
-    { label: "Group C", value: 300 },
-    { label: "Group D", value: 200 },
-  ];
-  const [currentFunds, setCurrentFunds] = useState(0);
+  const [currentFunds, setCurrentFunds] = useState(null); // null = loading/unset
   const [holdings, setHoldings] = useState([]);
+  const [loadingHoldings, setLoadingHoldings] = useState(true);
 
   useEffect(() => {
-    // I've assigned the interval to a variable to add the cleanup function.
-    // This is a critical bug fix to prevent memory leaks, not a logic change.
-    const interval = setInterval(() => {
-      async function getCurrentFunds() {
-        // 2. CHANGED: Use apiClient and the shorter URL
-        let funds = await apiClient.get("/funds");
-        setCurrentFunds(funds.data.fundsAvilable);
-      }
-      async function getData() {
-        // 3. CHANGED: Use apiClient and the shorter URL
-        let response = await apiClient.get("/holdings");
-        setHoldings(response.data);
-      }
-      getData();
-      getCurrentFunds();
-    }, 4000);
+    let mounted = true;
 
-    // This cleanup function is essential to stop the interval when you leave the page.
-    return () => clearInterval(interval);
+    async function fetchOnce() {
+      try {
+        // Fetch funds
+        const fundsRes = await apiClient.get("/funds");
+        // envelope: { success, message, data }
+        const fundsPayload = fundsRes?.data?.data;
+        const fundsVal = Number(fundsPayload?.fundsAvilable ?? 0);
+        if (mounted) setCurrentFunds(Number.isFinite(fundsVal) ? fundsVal : 0);
+      } catch (err) {
+        console.error("fetch funds error:", err);
+        if (mounted) setCurrentFunds(0);
+      }
+
+      try {
+        // Fetch holdings
+        const holdRes = await apiClient.get("/holdings");
+        // server may return envelope or raw array; prefer envelope
+        const holdPayload = holdRes?.data?.data ?? holdRes?.data ?? [];
+        if (mounted) setHoldings(Array.isArray(holdPayload) ? holdPayload : []);
+      } catch (err) {
+        console.error("fetch holdings error:", err);
+        if (mounted) setHoldings([]);
+      } finally {
+        if (mounted) setLoadingHoldings(false);
+      }
+    }
+
+    // initial fetch
+    fetchOnce();
+
+    // interval refresh (optional). keep interval if you want live updates
+    const interval = setInterval(fetchOnce, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
-  let totalProfit =
-    holdings.reduce((netTotal, currVaue, curIndex) => {
-      return Math.floor(netTotal + currVaue.price * currVaue.qty);
-    }, 0) -
-    holdings.reduce((netTotal, currVaue, curIndex) => {
-      return Math.floor(netTotal + currVaue.avg * currVaue.qty);
-    }, 0);
+  // safe numeric helpers
+  const toNumberSafe = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
 
-  let investment = holdings
-    .reduce((netTotal, currVaue, curIndex) => {
-      return Math.floor(netTotal + currVaue.avg * currVaue.qty);
-    }, 0)
-    .toLocaleString("en-IN", {
+  const currency = (val) =>
+    Number(toNumberSafe(val)).toLocaleString("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
 
-  let currentValue = holdings
-    .reduce((netTotal, currVaue, curIndex) => {
-      return Math.floor(netTotal + currVaue.price * currVaue.qty);
-    }, 0)
-    .toLocaleString("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  // compute totals defensively
+  const investmentNumber = holdings.reduce((acc, h) => {
+    const avg = toNumberSafe(h.avg);
+    const qty = toNumberSafe(h.qty);
+    return acc + avg * qty;
+  }, 0);
+
+  const currentValueNumber = holdings.reduce((acc, h) => {
+    const price = toNumberSafe(h.price);
+    const qty = toNumberSafe(h.qty);
+    return acc + price * qty;
+  }, 0);
+
+  const totalProfit = Math.round(currentValueNumber - investmentNumber);
 
   return (
-    <div className="container mt-5 ms-3 mb-3 text-muted ">
+    <div className="container mt-5 ms-3 mb-3 text-muted">
       <div className="header mt-5 pb-3">
         <h4 className="mb-4">Welcome To kite</h4>
         <hr />
@@ -77,35 +90,17 @@ export default function Summary() {
       <div className="equity mb-5">
         <h4 className="mb-2">Equity</h4>
         <div className="holdingSummary d-flex">
-          <div className="avilableMargin p-5  d-flex flex-column align-items-center justify-content-center border-end">
-            <h2
-              className={
-                currentFunds > 0 ? "green" : currentFunds < 0 ? "red" : ""
-              }
-            >
-              {currentFunds?.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "N/A"}
+          <div className="avilableMargin p-4 d-flex flex-column align-items-center justify-content-center border-end">
+            <h2 className={currentFunds > 0 ? "green" : currentFunds < 0 ? "red" : ""}>
+              {currentFunds === null ? "Loading..." : currency(currentFunds)}
             </h2>
-            <p className="mt-1">Margin Avilable</p>
+            <p className="mt-1">Margin Available</p>
           </div>
-          <div className="MarginSummary ms-5 d-flex flex-column align-items-center justify-content-center">
+
+          <div className="MarginSummary ms-4 d-flex flex-column align-items-start justify-content-center">
             <p>Margin Used : 0</p>
-            <p
-              className={
-                currentFunds > 0 ? "green" : currentFunds < 0 ? "red" : ""
-              }
-            >
-              Opening Balance :{" "}
-              {currentFunds?.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "N/A"}
+            <p className={currentFunds > 0 ? "green" : currentFunds < 0 ? "red" : ""}>
+              Opening Balance : {currentFunds === null ? "Loading..." : currency(currentFunds)}
             </p>
           </div>
         </div>
@@ -113,38 +108,25 @@ export default function Summary() {
       </div>
 
       <div className="holdings mt-5">
-        <h4 className="mt-4 mb-2">Holdings(13)</h4>
-        <Box sx={{ width: "100%" }}>
-          <LinearProgress />
-        </Box>
-        <div className="data d-flex">
-          <div className="first p-5 border-end">
-            <h3
-              className={
-                totalProfit > 0 ? "green" : totalProfit < 0 ? "red" : ""
-              }
-            >
-              {totalProfit?.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "N/A"}
+        <h4 className="mt-4 mb-2">Holdings ({holdings.length})</h4>
+        <Box sx={{ width: "100%" }}>{loadingHoldings ? <LinearProgress /> : null}</Box>
+
+        <div className="data d-flex" style={{ alignItems: "center" }}>
+          <div className="first p-4 border-end">
+            <h3 className={totalProfit > 0 ? "green" : totalProfit < 0 ? "red" : ""}>
+              {currency(totalProfit)}
             </h3>
             <p>P&L</p>
           </div>
-          <hr />
 
-          <div className="second m-5">
+          <div className="second m-4" style={{ lineHeight: 1.6 }}>
             <p>
               Current Value <br />
-              <span>{currentValue || "N/A"}</span>
-              {"k"}
+              <span>{currency(currentValueNumber)}</span>
             </p>
             <p>
               Investment <br />
-              <span>{investment || "N/A"}</span>
-              {"k"}
+              <span>{currency(investmentNumber)}</span>
             </p>
           </div>
         </div>
