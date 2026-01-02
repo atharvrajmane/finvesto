@@ -4,21 +4,11 @@ const asyncWrapper = require("../utils/asyncWrapper");
 const AppError = require("../utils/AppError");
 const { success } = require("../utils/response");
 
-/**
- * @desc    Get watchlist for logged-in user
- * @route   GET /api/watchlist
- * @access  Private
- */
 exports.getWatchlist = asyncWrapper(async (req, res) => {
   const watchlist = await WatchlistModel.find({ userId: req.user._id });
   return success(res, watchlist, "Watchlist fetched successfully");
 });
 
-/**
- * @desc    Add stock to watchlist
- * @route   POST /api/watchlist
- * @access  Private
- */
 exports.addStockToWatchlist = asyncWrapper(async (req, res) => {
   const { stockName } = req.body;
   const userId = req.user._id;
@@ -33,11 +23,6 @@ exports.addStockToWatchlist = asyncWrapper(async (req, res) => {
   return success(res, savedStock, "Stock added to watchlist", 201);
 });
 
-/**
- * @desc    Remove stock from watchlist
- * @route   DELETE /api/watchlist
- * @access  Private
- */
 exports.deleteStockFromWatchlist = asyncWrapper(async (req, res) => {
   const { stockName } = req.body;
   const userId = req.user._id;

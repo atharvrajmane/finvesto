@@ -1,4 +1,3 @@
-// backend/Controllers/fundController.js
 const { fundsModel } = require("../models/FundsModel.js");
 const asyncWrapper = require('../utils/asyncWrapper');
 const AppError = require('../utils/AppError');
@@ -6,7 +5,6 @@ const { success } = require('../utils/response');
 
 exports.getFunds = asyncWrapper(async (req, res) => {
   const userId = req.user._id;
-  // Ensure document exists (create if not)
   const funds = await fundsModel.findOneAndUpdate(
     { userId },
     { $setOnInsert: { userId } },
@@ -18,7 +16,6 @@ exports.getFunds = asyncWrapper(async (req, res) => {
 
 exports.addFunds = asyncWrapper(async (req, res) => {
   const userId = req.user._id;
-  // Accept either "funds" or "amount" as body field for compatibility
   const amountRaw = req.body.funds ?? req.body.amount;
   const amount = Number(amountRaw);
 

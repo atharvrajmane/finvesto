@@ -4,6 +4,67 @@
 }
 
 .highlightElement{
-    color: orangered !important;
+    color: #30209B !important;
     font-weight: 700 !important;
+}
+
+/* =========================
+   PROFILE DROPDOWN (THEME ALIGNED)
+========================= */
+
+.profile-wrapper {
+    position: relative;
+    margin-left: 14px;
+}
+
+.profile-btn {
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: #30209B;
+    cursor: pointer;
+    padding: 6px 10px;
+    font-weight: 600;
+}
+
+.profile-btn:hover {
+    color: #24BEEB;
+}
+
+.profile-dropdown {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    width: 170px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 14px rgba(48, 32, 155, 0.15);
+    border-radius: 6px;
+    z-index: 1000;
+}
+
+.profile-name {
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    color: #30209B;
+}
+
+.profile-dropdown hr {
+    margin: 0;
+    border-color: #f0f0f0;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #30209B;
+    font-weight: 500;
+}
+
+.logout-btn:hover {
+    background-color: #c1e7f3;
 }

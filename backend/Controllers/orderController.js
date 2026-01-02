@@ -1,5 +1,3 @@
-// backend/Controllers/orderController.js
-
 const mongoose = require('mongoose');
 const { OrdersModel } = require("../models/OrdersModel.js");
 const { HoldingsModel } = require("../models/HoldingsModel.js");
@@ -9,30 +7,23 @@ const asyncWrapper = require('../utils/asyncWrapper');
 const AppError = require('../utils/AppError');
 const { success } = require('../utils/response');
 
-// Helper
 function toNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : NaN;
 }
 
-/**
- * GET /api/orders
- */
+
 exports.getAllOrders = asyncWrapper(async (req, res) => {
   const allOrders = await OrdersModel.find({ userId: req.user._id }).sort({ createdAt: -1 });
   return success(res, allOrders, 'Orders fetched', 200);
 });
 
-/**
- * POST /api/orders/buy
- */
 exports.placeBuyOrder = asyncWrapper(async (req, res) => {
   const session = await mongoose.startSession();
   try {
     const { stockName, qty, AveragePrice } = req.body;
     const userId = req.user._id;
 
-    // Validate input
     const price = toNumber(AveragePrice);
     const quantity = toNumber(qty);
     if (!stockName || typeof stockName !== 'string' || price <= 0 || quantity <= 0) {
@@ -41,21 +32,17 @@ exports.placeBuyOrder = asyncWrapper(async (req, res) => {
 
     const cost = price * quantity;
 
-    // Pre-flight: check funds quickly to fail fast (no transaction yet)
     const fundsDoc = await fundsModel.findOne({ userId }).lean();
     if (!fundsDoc || (fundsDoc.fundsAvilable ?? 0) < cost) {
       throw new AppError('Insufficient funds', 400);
     }
 
-    // Start transaction
     session.startTransaction();
     let savedOrder;
     try {
-      // 1) create order inside session
       const orderData = new OrdersModel({ ...req.body, userId });
       savedOrder = await orderData.save({ session });
 
-      // 2) update or create holding inside session (read then write)
       const existing = await HoldingsModel.findOne({ name: stockName, userId }).session(session);
 
       if (existing) {
@@ -82,7 +69,6 @@ exports.placeBuyOrder = asyncWrapper(async (req, res) => {
         await newHolding.save({ session });
       }
 
-      // 3) atomically decrement funds inside transaction
       const updatedFunds = await fundsModel.findOneAndUpdate(
         { userId, fundsAvilable: { $gte: cost } },
         { $inc: { fundsAvilable: -cost } },
@@ -90,16 +76,13 @@ exports.placeBuyOrder = asyncWrapper(async (req, res) => {
       );
 
       if (!updatedFunds) {
-        // Not enough funds at the moment of applying changes -> abort
         throw new AppError('Insufficient funds during transaction', 400);
       }
 
       await session.commitTransaction();
       return success(res, savedOrder, 'Buy order placed successfully!', 201);
     } catch (txErr) {
-      // Abort transaction and rethrow a proper AppError
       try { await session.abortTransaction(); } catch (e) { console.error('abortTransaction failed', e); }
-      // If txErr is AppError, rethrow as-is so middleware preserves statusCode
       if (txErr instanceof AppError) throw txErr;
       throw new AppError(txErr.message || 'Failed to place buy order', 500);
     }
@@ -108,23 +91,18 @@ exports.placeBuyOrder = asyncWrapper(async (req, res) => {
   }
 });
 
-/**
- * POST /api/orders/sell
- */
 exports.placeSellOrder = asyncWrapper(async (req, res) => {
   const session = await mongoose.startSession();
   try {
     const { stockName, qty, AveragePrice } = req.body;
     const userId = req.user._id;
 
-    // Validate input
     const price = toNumber(AveragePrice);
     const quantity = toNumber(qty);
     if (!stockName || typeof stockName !== 'string' || price <= 0 || quantity <= 0) {
       throw new AppError('Invalid input: stockName, qty and AveragePrice are required and must be positive.', 422);
     }
 
-    // Pre-flight: ensure holding exists and has enough quantity
     const holding = await HoldingsModel.findOne({ name: stockName, userId }).lean();
     if (!holding || Number(holding.qty) < quantity) {
       throw new AppError('Insufficient quantity to sell.', 400);
@@ -132,15 +110,12 @@ exports.placeSellOrder = asyncWrapper(async (req, res) => {
 
     const proceeds = price * quantity;
 
-    // Start transaction
     session.startTransaction();
     let savedOrder;
     try {
-      // 1) create order inside session
       const orderData = new OrdersModel({ ...req.body, userId });
       savedOrder = await orderData.save({ session });
 
-      // 2) re-read holding inside session and update
       const holdingInside = await HoldingsModel.findOne({ name: stockName, userId }).session(session);
       if (!holdingInside || Number(holdingInside.qty) < quantity) {
         throw new AppError('Holding not found or insufficient qty inside transaction', 400);
@@ -152,11 +127,9 @@ exports.placeSellOrder = asyncWrapper(async (req, res) => {
         holdingInside.net = Number(holdingInside.avg || 0) * newQty;
         await holdingInside.save({ session });
       } else {
-        // remove holding if zero
         await HoldingsModel.deleteOne({ _id: holdingInside._id }).session(session);
       }
 
-      // 3) increment funds
       const updatedFunds = await fundsModel.findOneAndUpdate(
         { userId },
         { $inc: { fundsAvilable: proceeds } },
@@ -175,6 +148,6 @@ exports.placeSellOrder = asyncWrapper(async (req, res) => {
       throw new AppError(txErr.message || 'Failed to place sell order', 500);
     }
   } finally {
-    try { session.endSession(); } catch (e) { /* ignore */ }
+    try { session.endSession(); } catch (e) {  }
   }
 });

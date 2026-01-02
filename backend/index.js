@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const cookieParser = require("cookie-parser");
 const passport = require('passport');
 
 const authRoutes = require('./Routes/authRoutes');
@@ -12,9 +11,13 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // --- Middleware ---
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 app.use(express.json()); 
-app.use(cookieParser());
 app.use(passport.initialize());
 require('./config/passport-config.js');
 
@@ -25,8 +28,6 @@ mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
     console.log("✅ MongoDB connected");
-    console.log("📦 DB Name:", mongoose.connection.name);
-    console.log("🌍 Host:", mongoose.connection.host);
   })
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
@@ -38,7 +39,6 @@ const positionRoutes = require('./Routes/positionRoutes.js');
 const orderRoutes = require('./Routes/orderRoutes.js');
 const watchlistRoutes = require('./Routes/watchlistRoutes.js');
 const fundRoutes = require('./Routes/fundRoutes.js');
-const initRoutes = require('./Routes/initRoutes.js'); 
 
 // --- API Routes ---
 app.use("/api/holdings", holdingRoutes);
@@ -47,10 +47,9 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/funds", fundRoutes);
 
-app.use("/api/init", initRoutes);
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-    console.log(`Finvesto server running on http://localhost:${port}`);
+  console.log(`🚀 Finvesto backend running on port ${port}`);
 });

@@ -1,4 +1,3 @@
-// validators/fundsValidator.js
 const { body, validationResult } = require('express-validator');
 
 const addFundsRules = [

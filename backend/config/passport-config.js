@@ -9,7 +9,7 @@ const jwtOptions = {
 
 if (!jwtOptions.secretOrKey) {
     console.error('CRITICAL ERROR: JWT_SECRET is not defined in environment variables.');
-    // process.exit(1); 
+    process.exit(1); 
 }
 
 passport.use(new JwtStrategy(jwtOptions, async (jwt_payload, done) => {

@@ -14,7 +14,6 @@ const holdingSchema = new mongoose.Schema({
   },
 });
 
-// Create a compound index to ensure a user can only have one document per stock name.
 holdingSchema.index({ userId: 1, name: 1 }, { unique: true });
 
 const HoldingsModel = mongoose.model("Holding", holdingSchema);
