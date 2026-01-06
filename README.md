@@ -202,6 +202,7 @@ http://localhost:5174
 
 **Atharv Rajmane**
 Computer Engineering Student (2026)
+
 Full-Stack Developer (MERN)
 
 📧 Email: [atharvrajmane81@gmail.com](mailto:atharvrajmane81@gmail.com)
