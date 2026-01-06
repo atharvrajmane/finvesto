@@ -8,7 +8,6 @@ export default function HowItWorks() {
           Get Started in 3 Simple Steps
         </h2>
         <div className="relative">
-          {/* Dotted line for desktop */}
           <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 border-t-2 border-dashed border-slate-300 -translate-y-1/2"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 relative">
             <div className="text-center">

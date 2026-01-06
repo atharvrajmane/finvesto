@@ -2,7 +2,6 @@ import React from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 
-// This is a simple page component for the Terms of Service.
 export default function TermsPage() {
   return (
     <div className="bg-white">

@@ -1,5 +1,4 @@
 import React from 'react';
-// 1. Import the specific icons you need from the library
 import {
     TrendingUp,
     Search,
@@ -7,7 +6,6 @@ import {
     ShieldOutlined
 } from '@mui/icons-material';
 
-// 2. Replace the inline SVG with the imported component
 const featuresData = [
     {
         icon: <TrendingUp sx={{ fontSize: 40 }} />,

@@ -2,7 +2,6 @@ import React from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 
-// This is a simple page component for the Privacy Policy.
 export default function PrivacyPage() {
   return (
     <div className="bg-white">
