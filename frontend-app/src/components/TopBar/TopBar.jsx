@@ -4,7 +4,7 @@ import "./TopBar.css"
 export default function TopBar(){
     return(
         <>
-        <div className="container-fluid sticky-top whiteBackgroud">
+        <div className="container-fluid sticky-top whiteBackground">
             <div className="row">
                 <div className="col-md-4 border">
                 <LeftBar/>

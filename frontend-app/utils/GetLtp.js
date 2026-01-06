@@ -1,31 +1,40 @@
-import {stocks} from "./stocks.js"
+import { stocks } from "./stocks.js";
+const priceCache = {};
 
-function generateRandomNumber(target,stockSymbol) {
-    // Calculate the minimum and maximum values
-    const min = target - 10;
-    const max = target + 10;
-    const randomNumber = Math.random() * (max - min) + min;
-    const difference = randomNumber - target;
-    const percentageDifference = (difference / target) * 100;
-    const isDown = difference < 0;
+function getBasePrice(symbol) {
+  const stock = stocks.find((s) => s.stockSymbol === symbol);
+  return stock ? Number(stock.avgTradePrice) : null;
+}
 
-    return {
-        stockSymbol:stockSymbol,
-        givenPrice:target,
-        randomNumber: parseFloat(randomNumber.toFixed(2)),
-        difference: parseFloat(difference.toFixed(2)),
-        percentageDifference: parseFloat(percentageDifference.toFixed(2)),
-        isDown:isDown
+export function getLtp(symbol) {
+  const basePrice = getBasePrice(symbol);
+  if (!basePrice) return null;
+
+  if (!priceCache[symbol]) {
+    priceCache[symbol] = {
+      price: basePrice,
+      lastUpdate: Date.now(),
     };
-}
+  }
 
-export  function getLtp(symbol){
-    for(let i = 0; i < stocks.length; i++){
-        if(symbol == stocks[i].stockSymbol){
-            return generateRandomNumber(Number(stocks[i].avgTradePrice),symbol);
-        }
-        
-    }
+  const cache = priceCache[symbol];
+  const now = Date.now();
+
+  if (now - cache.lastUpdate > 3999) {
+    const change = Math.random() * 20 - 10;
+    cache.price = Math.max(1, cache.price + change);
+    cache.lastUpdate = now;
+  }
+
+  const difference = cache.price - basePrice;
+  const percentageDifference = (difference / basePrice) * 100;
+
+  return {
+    stockSymbol: symbol,
+    givenPrice: basePrice,
+    randomNumber: Number(cache.price.toFixed(2)),
+    difference: Number(difference.toFixed(2)),
+    percentageDifference: Number(percentageDifference.toFixed(2)),
+    isDown: difference < 0,
+  };
 }
-getLtp()
-console.log(stocks);

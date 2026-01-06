@@ -1,18 +1,18 @@
 const mongoose = require("mongoose");
 
-const holdingSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  qty: { type: Number, required: true },
-  avg: { type: Number, required: true },
-  price: { type: Number, required: true },
-  net: { type: String },
-  day: { type: String },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const holdingSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    qty: { type: Number, required: true },
+    avg: { type: Number, required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
-});
+  { timestamps: true }
+);
 
 holdingSchema.index({ userId: 1, name: 1 }, { unique: true });
 

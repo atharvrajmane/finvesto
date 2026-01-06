@@ -9,21 +9,19 @@ export default function Menu() {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // Get logged-in user
-  const user = JSON.parse(localStorage.getItem("user"));
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    user = null;
+  }
 
-  // --------------------
-  // LOGOUT HANDLER
-  // --------------------
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
 
-  // --------------------
-  // CLOSE DROPDOWN ON OUTSIDE CLICK
-  // --------------------
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -36,7 +34,6 @@ export default function Menu() {
 
   return (
     <div className="container-fluid m-1 d-flex justify-content-between align-items-center">
-      
       {/* LOGO */}
       <div className="kiteogo">
         <img
@@ -64,7 +61,6 @@ export default function Menu() {
 
             <div className="collapse navbar-collapse" id="navbarNav">
               <ul className="navbar-nav">
-
                 <li className="nav-item">
                   <NavLink
                     to="/"
@@ -119,19 +115,17 @@ export default function Menu() {
                     Charts
                   </NavLink>
                 </li>
-
               </ul>
             </div>
           </div>
         </nav>
 
-        {/* PROFILE DROPDOWN (RIGHT SIDE) */}
         <div className="profile-wrapper" ref={dropdownRef}>
           <button
             className="profile-btn"
             onClick={() => setIsProfileOpen(!isProfileOpen)}
           >
-            👤 {user?.username}
+            👤 {user?.username || "Profile"}
           </button>
 
           {isProfileOpen && (
@@ -144,7 +138,6 @@ export default function Menu() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

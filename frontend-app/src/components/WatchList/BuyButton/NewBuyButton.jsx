@@ -5,26 +5,21 @@ import Alert from "@mui/material/Alert";
 import apiClient from "../../../api/apiClient";
 
 const NewBuyButton = forwardRef(({ stock }, ref) => {
-  // keep initial types similar to original (qty controlled)
   const [qty, setQty] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [message, setMessage] = useState("Place a valid Order");
+  const [message, setMessage] = useState("");
   const [errorType, setErrorType] = useState("success");
   const [currentFunds, setCurrentFunds] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // helper - safe number
-  const toNumberSafe = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
+  const price = Number(stock?.randomNumber);
+  const maxQty =
+    Number.isFinite(price) && price > 0 ? Math.floor(currentFunds / price) : 0;
 
-  // fetch funds once on mount (use original function name flow)
   async function getCurrentFunds() {
     try {
       const res = await apiClient.get("/funds");
-      // backend uses envelope { success, message, data }
       const payload = res?.data?.data;
       const val = Number(payload?.fundsAvilable ?? 0);
       setCurrentFunds(Number.isFinite(val) ? val : 0);
@@ -36,119 +31,109 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
 
   useEffect(() => {
     getCurrentFunds();
-    // run only once, like your original code's intention
   }, []);
 
-  // preserve original executeBuyOrdder name but implement properly
-  async function executeBuyOrdder(stock) {
+  async function executeBuyOrder() {
     const numericQty = Number(qty);
+
     const payload = {
       orderType: "BUY",
       stockName: stock.stockSymbol ?? stock.name,
       qty: numericQty,
-      AveragePrice: Number(stock.randomNumber),
+      AveragePrice: price,
     };
+
     const res = await apiClient.post("/orders/buy", payload);
     return res?.data;
   }
 
-  // original handleQty behaviour, but allow clearing input and numeric-only
-  let handleQty = (e) => {
+  const handleQty = (e) => {
     const raw = e.target.value;
+
     if (raw === "") {
       setQty("");
       return;
     }
-    // allow only digits and no leading plus/minus/decimal
+
     if (!/^\d+$/.test(raw)) return;
 
     const numeric = Number(raw);
-    const max = Math.floor(Number(currentFunds / stock.randomNumber) || 0);
-    // keep same validation behavior as original but don't block user from typing a number slightly over max:
-    if (numeric >= 0 && numeric <= max) {
+    if (numeric > 0 && numeric <= maxQty) {
       setQty(raw);
-    } else {
-      // if it's greater than max, do not update (to match original strictness)
-      // this keeps the user from entering an invalid qty
     }
   };
 
-  const handleSnackbarClose = (event, reason) => {
+  const handleSnackbarClose = (_, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
-  const handleModalOpen = () => setModalOpen(true);
-  const handleModalClose = () => setModalOpen(false);
-
   const handleButtonClick = async () => {
     const numericQty = Number(qty);
-    const maxQty = Math.floor(Number(currentFunds / stock.randomNumber) || 0);
+
+    if (!Number.isFinite(price) || price <= 0) {
+      setMessage("Price not available");
+      setErrorType("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
     if (!Number.isFinite(numericQty) || numericQty <= 0) {
-      setMessage("Enter a valid qunatity");
-      setSnackbarOpen(true);
+      setMessage("Enter a valid quantity");
       setErrorType("error");
-      handleModalClose();
+      setSnackbarOpen(true);
       return;
     }
 
     if (numericQty > maxQty) {
-      setMessage("Enter a valid qunatity");
-      setSnackbarOpen(true);
+      setMessage("Insufficient funds");
       setErrorType("error");
-      handleModalClose();
-      setQty("");
+      setSnackbarOpen(true);
       return;
     }
 
-    // valid path: call API and await result
     setLoading(true);
     try {
-      const data = await executeBuyOrdder(stock);
+      const data = await executeBuyOrder();
       if (data?.success) {
-        // show server message if present else fallback
-        setMessage(data.message || `Order Executed Successfully. Bought ${stock.name} x ${numericQty}.`);
+        setMessage(data.message || "Buy order placed successfully");
         setErrorType("success");
-
-        // update funds from server if available, otherwise refetch
-        const newFunds = data?.data?.fundsAvilable;
-        if (typeof newFunds !== "undefined") setCurrentFunds(Number(newFunds));
-        else await getCurrentFunds();
-
         setQty("");
+        await getCurrentFunds();
       } else {
-        // server returned success:false
         setMessage(data?.message || "Order failed");
         setErrorType("error");
       }
     } catch (err) {
-      console.error("executeBuyOrdder error:", err);
-      const serverMessage =
-        err?.response?.data?.message ||
-        (err?.response?.data?.errors ? err.response.data.errors.map((x) => x.msg).join(", ") : null) ||
-        err?.message ||
-        "Order failed";
-      setMessage(serverMessage);
+      setMessage(
+        err?.response?.data?.message || err?.message || "Order failed"
+      );
       setErrorType("error");
     } finally {
       setLoading(false);
       setSnackbarOpen(true);
-      handleModalClose();
+      setModalOpen(false);
     }
   };
 
-  // preserve original look: button "B", modal Box width 500px etc.
   return (
     <div>
-      <Button variant="contained" onClick={handleModalOpen}>
-        B
+      <Button
+        variant="contained"
+        onClick={() => setModalOpen(true)}
+        style={{
+          background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+          color: "white",
+          fontWeight: 600,
+        }}
+      >
+        ➕ B
       </Button>
 
-      <Modal open={modalOpen} onClose={handleModalClose}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box
           sx={{
-            width: "500px",
+            width: 500,
             padding: 2,
             backgroundColor: "white",
             margin: "auto",
@@ -156,43 +141,48 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
           }}
         >
           <h2 className="text-center text-muted">Buy {stock.stockSymbol}</h2>
+
           <div className="d-flex">
             <TextField
               type="number"
-              id="outlined-basic"
               label="Quantity"
               variant="outlined"
               style={{ margin: "20px" }}
               value={qty}
               onChange={handleQty}
-              helperText={`Max Quantity = ${Math.floor(Number(currentFunds / stock.randomNumber) || 0)}`}
+              helperText={`Max Quantity = ${maxQty}`}
             />
-            <br />
+
             <TextField
-              id="filled-basic"
               label="@Market Price"
               variant="filled"
-              value={stock.randomNumber}
+              value={Number.isFinite(price) ? price : "N/A"}
               style={{ margin: "20px" }}
               disabled
             />
           </div>
-          <span className="d-flex align-items-center justify-content-center">
-            {" "}
+
+          <div className="text-center mb-3">
             <b>
-              Margin Avilable :{" "}
-              {currentFunds?.toLocaleString("en-IN", {
+              Margin Available:{" "}
+              {currentFunds.toLocaleString("en-IN", {
                 style: "currency",
                 currency: "INR",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "N/A"}{" "}
-            </b>{" "}
-          </span>
-          <br />
-          <div className="d-flex  align-items-center justify-content-center mb-2 ">
-            <Button variant="contained" onClick={handleButtonClick} disabled={loading || !qty}>
-              {loading ? <CircularProgress size={18} color="inherit" /> : `Buy ${stock.stockSymbol}`}
+              })}
+            </b>
+          </div>
+
+          <div className="d-flex justify-content-center">
+            <Button
+              variant="contained"
+              onClick={handleButtonClick}
+              disabled={loading || !qty}
+            >
+              {loading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                `Buy ${stock.stockSymbol}`
+              )}
             </Button>
           </div>
         </Box>
@@ -200,11 +190,11 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={1500}
+        autoHideDuration={2000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={errorType} style={{ width: "500px", height: "50px" }}>
+        <Alert severity={errorType} sx={{ width: 400 }}>
           {message}
         </Alert>
       </Snackbar>

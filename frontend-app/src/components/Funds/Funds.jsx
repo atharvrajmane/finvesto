@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import apiClient from "../../api/apiClient";
 
 export default function Funds() {
-  const [currentFunds, setCurrentFunds] = useState(null); // null = not loaded
+  const [currentFunds, setCurrentFunds] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,7 +16,6 @@ export default function Funds() {
       setLoading(true);
       try {
         const res = await apiClient.get("/funds");
-        // res.data is the axios body => { success, message, data }
         const payload = res?.data?.data;
         if (!payload) throw new Error(res?.data?.message || "Invalid response");
         const val = Number(payload.fundsAvilable ?? 0);
@@ -57,18 +56,17 @@ export default function Funds() {
             </h4>
           </div>
           <div className="statement">
-            <a href="#" style={{ textDecoration: "none" }}>
+            <a href="#" onClick={(e) => e.preventDefault()} style={{ textDecoration: "none" }}>
               <TripOriginIcon /> View Statement <ArrowForwardIcon />
             </a>
           </div>
         </div>
 
-        {/* ALIGNMENT FIX STARTS HERE */}
         <div className="detail mt-3 row justify-content-center">
           <div className="col-md-6">
-            <p>Avilable margin : </p>
+            <p>Available margin : </p>
             <p>Used margin : </p>
-            <p>Avilable Cash : </p>
+            <p>Available Cash : </p>
             <hr />
             <p>Opening Balance : </p>
             <p>Pay in : </p>
@@ -143,7 +141,6 @@ export default function Funds() {
             <hr className="mt-5 pt-5" />
           </div>
         </div>
-        {/* ALIGNMENT FIX ENDS HERE */}
 
         {error && (
           <div style={{ color: "red", textAlign: "center", marginTop: 12 }}>

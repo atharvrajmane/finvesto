@@ -1,57 +1,44 @@
-// src/components/Summary/Summary.jsx
 import "./Summary.css";
 import { useState, useEffect } from "react";
 import apiClient from "../../api/apiClient";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
+import { getLtp } from "../../../utils/GetLtp";
 
 export default function Summary() {
-  const [currentFunds, setCurrentFunds] = useState(null); // null = loading/unset
+  const [currentFunds, setCurrentFunds] = useState(null);
   const [holdings, setHoldings] = useState([]);
-  const [loadingHoldings, setLoadingHoldings] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    async function fetchOnce() {
+    async function fetchData() {
       try {
-        // Fetch funds
         const fundsRes = await apiClient.get("/funds");
-        // envelope: { success, message, data }
-        const fundsPayload = fundsRes?.data?.data;
-        const fundsVal = Number(fundsPayload?.fundsAvilable ?? 0);
+        const fundsVal = Number(fundsRes?.data?.data?.fundsAvilable ?? 0);
         if (mounted) setCurrentFunds(Number.isFinite(fundsVal) ? fundsVal : 0);
-      } catch (err) {
-        console.error("fetch funds error:", err);
-        if (mounted) setCurrentFunds(0);
-      }
 
-      try {
-        // Fetch holdings
-        const holdRes = await apiClient.get("/holdings");
-        // server may return envelope or raw array; prefer envelope
-        const holdPayload = holdRes?.data?.data ?? holdRes?.data ?? [];
-        if (mounted) setHoldings(Array.isArray(holdPayload) ? holdPayload : []);
+        const holdingsRes = await apiClient.get("/holdings");
+        const list = holdingsRes?.data?.data || [];
+        if (mounted) setHoldings(Array.isArray(list) ? list : []);
       } catch (err) {
-        console.error("fetch holdings error:", err);
-        if (mounted) setHoldings([]);
+        console.error("summary fetch error:", err);
+        if (mounted) {
+          setCurrentFunds(0);
+          setHoldings([]);
+        }
       } finally {
-        if (mounted) setLoadingHoldings(false);
+        if (mounted) setLoading(false);
       }
     }
 
-    // initial fetch
-    fetchOnce();
-
-    // interval refresh (optional). keep interval if you want live updates
-    const interval = setInterval(fetchOnce, 4000);
+    fetchData();
     return () => {
       mounted = false;
-      clearInterval(interval);
     };
   }, []);
 
-  // safe numeric helpers
   const toNumberSafe = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -65,17 +52,13 @@ export default function Summary() {
       maximumFractionDigits: 2,
     });
 
-  // compute totals defensively
   const investmentNumber = holdings.reduce((acc, h) => {
-    const avg = toNumberSafe(h.avg);
-    const qty = toNumberSafe(h.qty);
-    return acc + avg * qty;
+    return acc + toNumberSafe(h.avg) * toNumberSafe(h.qty);
   }, 0);
 
   const currentValueNumber = holdings.reduce((acc, h) => {
-    const price = toNumberSafe(h.price);
-    const qty = toNumberSafe(h.qty);
-    return acc + price * qty;
+    const livePrice = getLtp(h.name)?.randomNumber || 0;
+    return acc + livePrice * toNumberSafe(h.qty);
   }, 0);
 
   const totalProfit = Math.round(currentValueNumber - investmentNumber);
@@ -83,7 +66,7 @@ export default function Summary() {
   return (
     <div className="container mt-5 ms-3 mb-3 text-muted">
       <div className="header mt-5 pb-3">
-        <h4 className="mb-4">Welcome To kite</h4>
+        <h4 className="mb-4">Welcome To Finvesto</h4>
         <hr />
       </div>
 
@@ -109,7 +92,7 @@ export default function Summary() {
 
       <div className="holdings mt-5">
         <h4 className="mt-4 mb-2">Holdings ({holdings.length})</h4>
-        <Box sx={{ width: "100%" }}>{loadingHoldings ? <LinearProgress /> : null}</Box>
+        <Box sx={{ width: "100%" }}>{loading && <LinearProgress />}</Box>
 
         <div className="data d-flex" style={{ alignItems: "center" }}>
           <div className="first p-4 border-end">

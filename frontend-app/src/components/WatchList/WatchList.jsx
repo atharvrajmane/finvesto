@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useEffect, useState, useCallback } from "react";
 import Box from "@mui/material/Box";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -15,41 +14,36 @@ export default function WatchList() {
   const [addedStock, setAddedStock] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch watchlist (single source of truth)
-  const getWatchList = async () => {
+  const getWatchList = useCallback(async () => {
     try {
       const response = await apiClient.get("/watchlist");
-
-      // ✅ FIX: unwrap standardized backend response
-      const list = response?.data?.data || [];
-
-      setWatchList(list);
-    } catch (error) {
-      console.error("Failed to fetch watchlist:", error);
-      setWatchList([]); // safety fallback
+      setWatchList(response?.data?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch watchlist:", err);
+      setWatchList([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     getWatchList();
   }, []);
 
-  // Add stock to watchlist
   const handleSelectedStock = async (e) => {
     const stockSymbol = e.target.value;
-    if (!stockSymbol) return;
-
-    setAddedStock(stockSymbol);
-
-    try {
-      await apiClient.post("/watchlist", { stockName: stockSymbol });
-      getWatchList();
-    } catch (error) {
-      console.error("Failed to add stock to watchlist:", error);
+  
+    if (watchList.some(s => s.stockSymbol === stockSymbol)) {
+      console.warn("Stock already in watchlist");
+      return;
     }
+  
+    setAddedStock(stockSymbol);
+  
+    await apiClient.post("/watchlist", { stockName: stockSymbol });
+    getWatchList();
   };
+  
 
   return (
     <div className="container-fluid">
@@ -65,7 +59,10 @@ export default function WatchList() {
               onChange={handleSelectedStock}
             >
               {stocks.map((currStock) => (
-                <MenuItem key={uuidv4()} value={currStock.stockSymbol}>
+                <MenuItem
+                  key={currStock.stockSymbol}
+                  value={currStock.stockSymbol}
+                >
                   {currStock.stockName}
                 </MenuItem>
               ))}
@@ -78,11 +75,8 @@ export default function WatchList() {
 
       {!isLoading &&
         watchList.map((stock) => (
-          <div key={stock._id || uuidv4()}>
-            <WatchListComponent
-              stock={stock}
-              refreshWatchlist={getWatchList}
-            />
+          <div key={`${stock._id}-${stock.stockSymbol}`}>
+            <WatchListComponent stock={stock} refreshWatchlist={getWatchList} />
             <hr />
           </div>
         ))}

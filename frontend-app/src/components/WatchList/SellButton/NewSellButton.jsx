@@ -1,52 +1,61 @@
-import React, { useState, useEffect, forwardRef } from "react";
-import { Button, Snackbar, Modal, Box } from "@mui/material";
+import React, { useState, forwardRef } from "react";
+import { Button, Snackbar, Modal, Box, CircularProgress } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import apiClient from "../../../api/apiClient";
 
 const NewSellButton = forwardRef(({ stock }, ref) => {
-  // ✅ FIX: controlled input from first render
   const [qty, setQty] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [message, setMessage] = useState("Place a valid Order");
+  const [message, setMessage] = useState("");
   const [errorType, setErrorType] = useState("success");
-  const [currentFunds, setCurrentFunds] = useState(0);
-  const [avilableqty, setAvilableQty] = useState(0);
+  const [availableQty, setAvailableQty] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  async function executeSellOrdder(stock) {
-    let orderData = {
-      orderType: "SELL",
-      stockName: stock.stockSymbol,
-      qty: Number(qty),
-      AveragePrice: stock.randomNumber,
-    };
-    await apiClient.post("/orders/sell", orderData);
+  const price = Number(stock?.randomNumber);
+
+  async function fetchAvailableQty() {
+    try {
+      const res = await apiClient.post("/holdings/quantity", {
+        name: stock.stockSymbol ?? stock.name,
+      });
+      setAvailableQty(Number(res?.data?.data?.qty ?? 0));
+    } catch (err) {
+      console.error("fetchAvailableQty error:", err);
+      setAvailableQty(0);
+    }
   }
 
-  useEffect(() => {
-    async function getCurrentFunds() {
-      let res = await apiClient.get("/funds");
-      setCurrentFunds(res?.data?.data?.fundsAvilable || 0);
+  async function executeSellOrder() {
+    const payload = {
+      orderType: "SELL",
+      stockName: stock.stockSymbol ?? stock.name,
+      qty: Number(qty),
+      AveragePrice: price,
+    };
+    const res = await apiClient.post("/orders/sell", payload);
+    return res?.data;
+  }
+
+  const handleQty = (e) => {
+    const raw = e.target.value;
+
+    if (raw === "") {
+      setQty("");
+      return;
     }
-    getCurrentFunds();
-  }, []);
 
-  let handleQty = (e) => {
-    setQty(e.target.value);
-  };
+    if (!/^\d+$/.test(raw)) return;
 
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-    setQty("");
+    const numeric = Number(raw);
+    if (numeric > 0 && numeric <= availableQty) {
+      setQty(raw);
+    }
   };
 
   const handleModalOpen = async () => {
-    let res = await apiClient.post("/holdings/quantity", {
-      name: stock.stockSymbol,
-    });
-    setAvilableQty(res?.data?.data?.qty || 0);
+    await fetchAvailableQty();
     setModalOpen(true);
   };
 
@@ -55,16 +64,53 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
     setQty("");
   };
 
+  const handleSnackbarClose = (_, reason) => {
+    if (reason === "clickaway") return;
+    setSnackbarOpen(false);
+  };
+
   const handleButtonClick = async () => {
-    if (qty > 0 && qty <= avilableqty) {
-      await executeSellOrdder(stock);
-      setErrorType("success");
-      setMessage(`Sold ${stock.stockSymbol} for ${stock.randomNumber} X ${qty}`);
-      setSnackbarOpen(true);
-      handleModalClose();
-    } else {
+    const numericQty = Number(qty);
+
+    if (!Number.isFinite(price) || price <= 0) {
+      setMessage("Price not available");
       setErrorType("error");
-      setMessage("Enter a valid Quantity");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (!Number.isFinite(numericQty) || numericQty <= 0) {
+      setMessage("Enter a valid quantity");
+      setErrorType("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (numericQty > availableQty) {
+      setMessage("Insufficient quantity");
+      setErrorType("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await executeSellOrder();
+      if (data?.success) {
+        setMessage(data.message || "Sell order placed successfully");
+        setErrorType("success");
+        setQty("");
+      } else {
+        setMessage(data?.message || "Sell order failed");
+        setErrorType("error");
+      }
+    } catch (err) {
+      setMessage(
+        err?.response?.data?.message || err?.message || "Sell order failed"
+      );
+      setErrorType("error");
+    } finally {
+      setLoading(false);
       setSnackbarOpen(true);
       handleModalClose();
     }
@@ -75,22 +121,26 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
       <Button
         variant="contained"
         onClick={handleModalOpen}
-        style={{ backgroundColor: "orangered", color: "whitesmoke" }}
+        style={{
+          background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+          color: "white",
+          fontWeight: 600,
+        }}
       >
-        S
+        ➖ S
       </Button>
 
       <Modal open={modalOpen} onClose={handleModalClose}>
         <Box
           sx={{
-            width: "500px",
+            width: 500,
             padding: 2,
             backgroundColor: "white",
             margin: "auto",
             marginTop: "10%",
           }}
         >
-          <h2 className="text-center text-muted">SELL {stock.stockSymbol}</h2>
+          <h2 className="text-center text-muted">Sell {stock.stockSymbol}</h2>
 
           <div className="d-flex">
             <TextField
@@ -100,39 +150,34 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
               style={{ margin: "20px" }}
               value={qty}
               onChange={handleQty}
-              helperText={`Quantity Avilable = ${avilableqty}`}
+              helperText={`Available Quantity = ${availableQty}`}
             />
 
             <TextField
               label="@Market Price"
               variant="filled"
-              value={stock.randomNumber}
+              value={Number.isFinite(price) ? price : "N/A"}
               style={{ margin: "20px" }}
               disabled
             />
           </div>
 
-          <span className="d-flex align-items-center justify-content-center">
-            <b>
-              Margin Avilable :{" "}
-              {currentFunds.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </b>
-          </span>
-
-          <br />
-
-          <div className="d-flex align-items-center justify-content-center mb-2">
+          <div className="d-flex justify-content-center mb-3">
             <Button
               variant="contained"
               onClick={handleButtonClick}
-              style={{ backgroundColor: "orangered", color: "whitesmoke" }}
+              disabled={loading || !qty}
+              style={{
+                background:
+                  "linear-gradient(to bottom right, #30209B, #24BEEB)",
+                color: "white",
+              }}
             >
-              SELL {stock.stockSymbol}
+              {loading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                `Sell ${stock.stockSymbol}`
+              )}
             </Button>
           </div>
         </Box>
@@ -140,11 +185,11 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={1500}
+        autoHideDuration={2000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={errorType} style={{ width: "500px", height: "50px" }}>
+        <Alert severity={errorType} sx={{ width: 400 }}>
           {message}
         </Alert>
       </Snackbar>

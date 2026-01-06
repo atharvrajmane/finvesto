@@ -12,32 +12,29 @@ export default function AddFundsBtn({ setCurrentFunds }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function getCurrentFunds() {
-    try {
-      const res = await apiClient.get("/funds");
-      const payload = res?.data?.data;
-      if (payload && typeof payload.fundsAvilable !== "undefined") {
-        setCurrentFunds(Number(payload.fundsAvilable));
-      }
-    } catch (err) {
-      console.error("getCurrentFunds error:", err);
-    }
-  }
-
-  const handleAddFundsChange = (e) => {
-    setFunds(e.target.value);
-  };
-
-  const handleSnackbarClose = (event, reason) => {
+  const handleSnackbarClose = (_, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
   };
 
   const handleModalOpen = () => setModalOpen(true);
-  const handleModalClose = () => setModalOpen(false);
+  const handleModalClose = () => {
+    if (!loading) setModalOpen(false);
+  };
+
+  const handleAddFundsChange = (e) => {
+    const raw = e.target.value;
+    if (raw === "") {
+      setFunds("");
+      return;
+    }
+    if (!/^\d+(\.\d{0,2})?$/.test(raw)) return; // numeric + 2 decimals
+    setFunds(raw);
+  };
 
   const handleButtonClick = async () => {
     const amount = Number(funds);
+
     if (!Number.isFinite(amount) || amount <= 0) {
       setMsgType("error");
       setMessage("Enter a valid positive amount");
@@ -47,34 +44,36 @@ export default function AddFundsBtn({ setCurrentFunds }) {
 
     setLoading(true);
     try {
-      // <-- SEND field name 'amount' to match backend validation
-      const resultPost = await apiClient.post("/funds/add", { amount: amount });
+      const res = await apiClient.post("/funds/add", { amount });
 
-      console.log("add funds response:", resultPost?.data); // debug, remove later
-
-      if (resultPost?.data?.success) {
+      if (res?.data?.success) {
         setMsgType("success");
-        setMessage(resultPost.data.message || "Added Funds Successfully");
-        const newFunds = resultPost?.data?.data?.fundsAvilable;
-        if (typeof newFunds !== "undefined") setCurrentFunds(Number(newFunds));
-        else await getCurrentFunds();
+        setMessage(res.data.message || "Funds added successfully");
+        const newFunds = res?.data?.data?.fundsAvilable;
+        if (typeof newFunds !== "undefined") {
+          setCurrentFunds(Number(newFunds));
+        }
+
         setFunds("");
       } else {
         setMsgType("error");
-        setMessage(resultPost?.data?.message || "Failed to add funds");
+        setMessage(res?.data?.message || "Failed to add funds");
       }
     } catch (err) {
-      console.error("add funds error:", err);
-      const serverMessage = err?.response?.data?.message || 
-                            // fallback: express-validator style errors array
-                            (err?.response?.data?.errors ? err.response.data.errors.map(e=>e.msg).join(", ") : null) ||
-                            err?.message || "Add funds failed";
+      const serverMessage =
+        err?.response?.data?.message ||
+        (err?.response?.data?.errors
+          ? err.response.data.errors.map((e) => e.msg).join(", ")
+          : null) ||
+        err?.message ||
+        "Add funds failed";
+
       setMsgType("error");
       setMessage(serverMessage);
     } finally {
       setLoading(false);
       setSnackbarOpen(true);
-      handleModalClose();
+      setModalOpen(false);
     }
   };
 
@@ -83,7 +82,11 @@ export default function AddFundsBtn({ setCurrentFunds }) {
       <Button
         variant="contained"
         onClick={handleModalOpen}
-        sx={{ backgroundColor: "rgb(40,184,81)", color: "white" }}
+        sx={{
+          background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+          color: "white",
+          fontWeight: 600,
+        }}
       >
         ADD FUNDS
       </Button>
@@ -91,32 +94,38 @@ export default function AddFundsBtn({ setCurrentFunds }) {
       <Modal open={modalOpen} onClose={handleModalClose}>
         <Box
           sx={{
-            width: { xs: "90%", md: "50%" },
-            padding: 2,
+            width: { xs: "90%", md: "40%" },
+            padding: 3,
             backgroundColor: "white",
             margin: "auto",
             marginTop: "10%",
-            borderRadius: 1,
-            boxShadow: 3,
+            borderRadius: 2,
+            boxShadow: 4,
           }}
         >
-          <div className="container d-flex" style={{ gap: 16, alignItems: "center" }}>
+          <div className="d-flex" style={{ gap: 16, alignItems: "center" }}>
             <TextField
               value={funds}
               onChange={handleAddFundsChange}
-              id="outlined-basic"
-              type="number"
-              label="Enter Funds to Add"
-              variant="outlined"
+              type="text"
+              label="Enter amount"
               fullWidth
             />
             <Button
               variant="contained"
               onClick={handleButtonClick}
-              disabled={loading}
-              sx={{ color: "white", backgroundColor: "green" }}
+              disabled={loading || !funds}
+              sx={{
+                background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+                color: "white",
+                minWidth: 120,
+              }}
             >
-              {loading ? <CircularProgress size={20} color="inherit" /> : "Add Funds"}
+              {loading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                "Add"
+              )}
             </Button>
           </div>
         </Box>
@@ -124,7 +133,7 @@ export default function AddFundsBtn({ setCurrentFunds }) {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >

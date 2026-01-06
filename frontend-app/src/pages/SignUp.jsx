@@ -28,7 +28,10 @@ export default function SignUp() {
     try {
       const response = await apiClient.post("/auth/register", formData);
 
-      setMessage(response.data.message + " Redirecting to login...");
+      setMessage(
+        (response.data.message || "Account created.") +
+          " Redirecting to login..."
+      );
       setIsError(false);
 
       setTimeout(() => {
@@ -125,7 +128,6 @@ export default function SignUp() {
   );
 }
 
-// Re-using the same styles from Login.jsx for a consistent theme
 const styles = {
   container: {
     display: "flex",

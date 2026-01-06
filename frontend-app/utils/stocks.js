@@ -414,12 +414,6 @@ export const stocks = [
     prevClose: 20.2,
   },
   {
-    stockSymbol: "HDFCBANK",
-    stockName: "HDFC Bank Limited",
-    avgTradePrice: 65,
-    prevClose: 66.29,
-  },
-  {
     stockSymbol: "ICLK",
     stockName: "iClick Interactive Asia Group Limited",
     avgTradePrice: 15,

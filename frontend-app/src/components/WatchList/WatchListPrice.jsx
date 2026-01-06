@@ -5,7 +5,7 @@ export default function WatchListPrice({ stock }) {
   return (
     <div className="stockPercent d-flex">
       <div className={stock?.isDown ? "red" : "green"}>
-        {stock?.randomNumber || "N/A"}
+        {stock?.randomNumber?.toFixed?.(2) || "N/A"}
       </div>
       {stock?.isDown ? (
         <KeyboardArrowDownIcon className="red" />

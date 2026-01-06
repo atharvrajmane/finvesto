@@ -9,22 +9,6 @@ exports.getAllHoldings = asyncWrapper(async (req, res) => {
   return success(res, allHoldings, "Holdings fetched successfully");
 });
 
-exports.updateHolding = asyncWrapper(async (req, res) => {
-  const { name, price, net } = req.body;
-
-  const updatedHolding = await HoldingsModel.findOneAndUpdate(
-    { name: name, userId: req.user._id },
-    { $set: { price: price, net: net } },
-    { new: true }
-  );
-
-  if (!updatedHolding) {
-    throw new AppError("Holding not found for this user", 404);
-  }
-
-  return success(res, updatedHolding, "Holding updated successfully");
-});
-
 exports.getAvailableQty = asyncWrapper(async (req, res) => {
   const { name } = req.body;
 

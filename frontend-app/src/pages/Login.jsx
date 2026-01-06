@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import apiClient from "../api/apiClient"; // Assuming you have this from previous steps
+import apiClient from "../api/apiClient";
 
-// This path directly references the image in your public folder
 const logoUrl = "logo.png";
 
 export default function Login() {
@@ -26,17 +25,12 @@ export default function Login() {
       const response = await apiClient.post("/auth/login", formData);
 
       if (response.data.token) {
-        if (response.data.token) {
-          // Remove "Bearer " prefix
-          const rawToken = response.data.token.replace("Bearer ", "");
-        
-          // ✅ Store with correct keys
-          localStorage.setItem("token", rawToken);
+        const rawToken = response.data.token.replace("Bearer ", "");
+        localStorage.setItem("token", rawToken);
+        if (response.data.user) {
           localStorage.setItem("user", JSON.stringify(response.data.user));
-        
-          navigate("/");
         }
-        
+        navigate("/");
       }
     } catch (error) {
       setIsError(true);
@@ -115,7 +109,6 @@ export default function Login() {
   );
 }
 
-// --- CSS-in-JS for a clean, Zerodha-inspired theme ---
 const styles = {
   container: {
     display: "flex",
@@ -134,12 +127,11 @@ const styles = {
     maxWidth: "400px",
     textAlign: "center",
   },
-  // --- THIS IS THE FIX ---
   logo: {
     marginBottom: "30px",
-    maxWidth: "160px", // The image can't be wider than 160px
-    height: "auto", // Height will adjust automatically to maintain aspect ratio
-    objectFit: "contain", // Ensures the whole image is visible
+    maxWidth: "160px",
+    height: "auto",
+    objectFit: "contain",
   },
   title: {
     fontSize: "22px",
@@ -170,7 +162,6 @@ const styles = {
   button: {
     width: "100%",
     padding: "12px",
-    // Use background-image for the gradient
     backgroundImage: "linear-gradient(to bottom right, #30209B, #24BEEB)",
     color: "white",
     border: "none",
@@ -178,13 +169,9 @@ const styles = {
     cursor: "pointer",
     fontSize: "16px",
     fontWeight: "bold",
-    // You might want to remove or adjust the background-color for transition if it interferes
-    // transition: 'background-color 0.2s',
-    // If you want a subtle hover effect, you could change the gradient slightly or add a box-shadow
   },
   buttonDisabled: {
-    // For the disabled state, you might want a simpler, muted gradient or a solid color
-    backgroundImage: "linear-gradient(to bottom right, #5040B0, #64DFFF)", // Slightly muted version
+    backgroundImage: "linear-gradient(to bottom right, #5040B0, #64DFFF)",
     cursor: "not-allowed",
   },
   footerLink: {

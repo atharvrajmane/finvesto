@@ -12,7 +12,6 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-
 exports.getAllOrders = asyncWrapper(async (req, res) => {
   const allOrders = await OrdersModel.find({ userId: req.user._id }).sort({ createdAt: -1 });
   return success(res, allOrders, 'Orders fetched', 200);
@@ -50,24 +49,20 @@ exports.placeBuyOrder = asyncWrapper(async (req, res) => {
         const existingAvg = Number(existing.avg || 0);
         const newQty = existingQty + quantity;
         const newAvg = ((existingAvg * existingQty) + (price * quantity)) / newQty;
-        const roundedAvg = Number(newAvg.toFixed(2));
+      
         existing.qty = newQty;
-        existing.avg = roundedAvg;
-        existing.price = price;
-        existing.net = roundedAvg * newQty;
+        existing.avg = Number(newAvg.toFixed(2));
         await existing.save({ session });
       } else {
         const newHolding = new HoldingsModel({
           name: stockName,
           qty: quantity,
           avg: price,
-          price,
-          net: price * quantity,
-          day: 0,
           userId
         });
         await newHolding.save({ session });
       }
+      
 
       const updatedFunds = await fundsModel.findOneAndUpdate(
         { userId, fundsAvilable: { $gte: cost } },
@@ -124,11 +119,11 @@ exports.placeSellOrder = asyncWrapper(async (req, res) => {
       const newQty = Number(holdingInside.qty) - quantity;
       if (newQty > 0) {
         holdingInside.qty = newQty;
-        holdingInside.net = Number(holdingInside.avg || 0) * newQty;
         await holdingInside.save({ session });
       } else {
         await HoldingsModel.deleteOne({ _id: holdingInside._id }).session(session);
       }
+
 
       const updatedFunds = await fundsModel.findOneAndUpdate(
         { userId },

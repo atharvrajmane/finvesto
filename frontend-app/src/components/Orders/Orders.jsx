@@ -19,11 +19,7 @@ export default function Orders() {
         const response = await apiClient.get("/orders");
 
         const payload = response?.data;
-        const ordersArray = Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.data)
-          ? payload.data
-          : [];
+        const ordersArray = response?.data?.data || [];
 
         if (mounted) setPlacedOrders(ordersArray);
       } catch (err) {
@@ -39,7 +35,7 @@ export default function Orders() {
     getData();
 
     return () => { mounted = false; };
-  }, []); // run once
+  }, []);
 
   if (loading) {
     return (
@@ -120,7 +116,6 @@ export default function Orders() {
             )}
           </tbody>
         </table>
-        --------
       </div>
     </div>
   );
