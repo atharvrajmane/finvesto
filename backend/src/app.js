@@ -15,6 +15,10 @@ const tradingRoutes = require('./modules/trading/trading.routes');
 
 const app = express();
 
+// Trust the first reverse proxy (e.g., Render, Heroku, Nginx). 
+// This is required for express-rate-limit to correctly identify user IPs behind a proxy.
+app.set('trust proxy', 1);
+
 const cookieParser = require('cookie-parser');
 
 app.use(helmet());
