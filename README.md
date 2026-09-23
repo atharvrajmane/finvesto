@@ -1,4 +1,4 @@
-# 🚀 Finvesto — Stock Trading Platform
+#  Finvesto — Stock Trading Platform
 
 Finvesto is a full-stack stock trading platform engineered to showcase real-world application architecture, secure authentication workflows, protected client-side routing, and a clean separation of concerns between frontend and backend systems.
 
@@ -6,20 +6,20 @@ The project emphasizes scalability, maintainability, high performance, and produ
 
 ---
 
-## 📈 Recent Major Improvements
+##  Recent Major Improvements
 
 We have recently focused on enterprise-level scalability, reliability, and automated testing:
 
-* **⚡ Ultra-Low Latency with Redis Caching:** Integrated Redis to cache stock data and prices, reducing API latency from ~300ms down to **~15ms-30ms** for critical market data endpoints.
-* **🛡️ Double-Spend & Idempotency Protection:** Implemented UUID-based Idempotency Keys on the frontend and backend to guarantee that a user is never double-charged for an order, even if a request is fired multiple times (e.g., due to rapid clicks or network retries).
-* **🔒 Rate Limiting & Security:** Integrated robust request rate limiting to protect endpoints against DDoS and brute-force attacks.
-* **🤖 Automated End-to-End (E2E) Testing:** Implemented full user-journey E2E testing using **Playwright**. Tests programmatically verify the registration, login, watchlist interaction, and trading workflow while automatically managing isolated database and Redis states.
-* **👷 Background Market Data Worker:** Developed a self-healing Cron-based background worker that fetches live stock quotes asynchronously and syncs them to Redis, entirely offloading the API fetching overhead from the user's critical request path.
-* **🐛 Comprehensive Global Error Handling:** Revamped the error handler to provide precise JSON responses, protecting internal stack traces from leaking while still providing detailed API error statuses to the client.
+* **Ultra-Low Latency with Redis Caching:** Integrated Redis to cache stock data and prices, reducing API latency from ~300ms down to **~15ms-30ms** for critical market data endpoints.
+* **Double-Spend & Idempotency Protection:** Implemented UUID-based Idempotency Keys on the frontend and backend to guarantee that a user is never double-charged for an order, even if a request is fired multiple times (e.g., due to rapid clicks or network retries).
+* **Rate Limiting & Security:** Integrated robust request rate limiting to protect endpoints against DDoS and brute-force attacks.
+* **Automated End-to-End (E2E) Testing:** Implemented full user-journey E2E testing using **Playwright**. Tests programmatically verify the registration, login, watchlist interaction, and trading workflow while automatically managing isolated database and Redis states.
+* **Background Market Data Worker:** Developed a self-healing Cron-based background worker that fetches live stock quotes asynchronously and syncs them to Redis, entirely offloading the API fetching overhead from the user's critical request path.
+* **Comprehensive Global Error Handling:** Revamped the error handler to provide precise JSON responses, protecting internal stack traces from leaking while still providing detailed API error statuses to the client.
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 The application is divided into three independent parts:
 
@@ -31,13 +31,13 @@ Each part runs independently during development.
 
 ---
 
-## 🌐 Live Demo
+##  Live Demo
 
 The application is deployed and accessible online: https://finvesto-jayg.vercel.app/
 
 ---
 
-## 🏗️ Architecture Overview
+##  Architecture Overview
 
 ```
 Finvesto
@@ -53,7 +53,7 @@ Finvesto
 
 ---
 
-## 🖥️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 
@@ -73,7 +73,7 @@ Finvesto
 
 ---
 
-## ✨ Features
+##  Features
 
 ### Main Trading App
 
@@ -92,7 +92,7 @@ Finvesto
 
 ---
 
-## 🔐 Authentication Flow
+##  Authentication Flow
 
 1. User registers or logs in
 2. Backend issues a secure JWT token
@@ -102,7 +102,7 @@ Finvesto
 
 ---
 
-## ⚙️ Environment Variables (Local Development)
+##  Environment Variables (Local Development)
 
 This project uses a **simple, local-first environment configuration** during development.
 
@@ -124,7 +124,7 @@ FINNHUB_API_KEY=your_finnhub_key
 
 ---
 
-## 🚀 Running the Project Locally
+##  Running the Project Locally
 
 ### 1️⃣ Clone the Repository
 
@@ -161,7 +161,7 @@ npm run dev
 
 ---
 
-## 📚 What I Learned
+##  What I Learned
 
 * Designing resilient financial systems avoiding race conditions (Double-Spend Problem).
 * Implementing advanced caching strategies using Redis.
@@ -172,13 +172,13 @@ npm run dev
 
 ---
 
-## 👨‍💻 Author
+##  Author
 
 **Atharv Rajmane**  
 Computer Engineering Student (2026)  
 Full-Stack Developer (MERN)  
 
-📧 Email: [atharvrajmane81@gmail.com](mailto:atharvrajmane81@gmail.com)
+ Email: [atharvrajmane81@gmail.com](mailto:atharvrajmane81@gmail.com)
 
 ---
 
