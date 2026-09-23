@@ -16,9 +16,7 @@ export default function Orders() {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiClient.get("/trading");
-
-        // Safely extract the array regardless of exact backend nesting
+        const response = await apiClient.get("/trading");
         const ordersArray = response?.data?.data || response?.data || [];
 
         if (mounted)
@@ -48,9 +46,7 @@ export default function Orders() {
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-
-  // Helper to format timestamps if your backend provides them (e.g., createdAt)
+    });
   const formatTime = (dateString) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -64,7 +60,7 @@ export default function Orders() {
 
   return (
     <div className="summary-container mt-4 mb-3">
-      {/* HEADER */}
+      {}
       <div className="summary-header pb-3 d-flex justify-content-between align-items-center">
         <div>
           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
@@ -87,7 +83,7 @@ export default function Orders() {
         </div>
       )}
 
-      {/* ORDERS TABLE */}
+      {}
       <div className="premium-card mb-5">
         <div className="table-responsive">
           <table className="table premium-table mb-0">
@@ -112,8 +108,7 @@ export default function Orders() {
                   </td>
                 </tr>
               ) : (
-                (() => {
-                  // Group orders by date
+                (() => {
                   const groupedOrders = placedOrders.reduce((acc, order) => {
                     const dateObj = new Date(order?.createdAt);
                     const dateString = isNaN(dateObj) ? "Unknown Date" : dateObj.toLocaleDateString("en-GB", {
@@ -124,9 +119,7 @@ export default function Orders() {
                     if (!acc[dateString]) acc[dateString] = [];
                     acc[dateString].push(order);
                     return acc;
-                  }, {});
-
-                  // Sort dates descending
+                  }, {});
                   const sortedDates = Object.keys(groupedOrders).sort((a, b) => {
                     if (a === "Unknown Date") return 1;
                     if (b === "Unknown Date") return -1;
@@ -141,15 +134,11 @@ export default function Orders() {
                         </td>
                       </tr>
                       {groupedOrders[date].map((order, idx) => {
-                        const key = order?._id || `order-${idx}`;
-
-                        // Map fields from JSON structure
+                        const key = order?._id || `order-${idx}`;
                         const orderType = (order?.type || "BUY").toUpperCase();
                         const stockName = order?.stockId?.symbol || "UNKNOWN";
                         const qty = Number(order?.quantity ?? 0);
-                        const priceNum = Number(order?.priceAtExecution ?? 0);
-
-                        // Static brokerage for UI purposes
+                        const priceNum = Number(order?.priceAtExecution ?? 0);
                         const brokerage = 20.0;
                         const isBuy = orderType === "BUY";
 

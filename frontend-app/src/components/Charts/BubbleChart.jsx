@@ -3,16 +3,10 @@ import { useDrawingArea } from "@mui/x-charts/hooks";
 import { styled } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import apiClient from "../../api/apiClient";
-
-// ==============================
-// FETCH HOLDINGS DATA
-// ==============================
+import apiClient from "../../api/apiClient";
 async function getData() {
   try {
-    const res = await apiClient.get("/portfolio");
-
-    // ✅ IMPORTANT: actual array is inside res.data.data
+    const res = await apiClient.get("/portfolio");
     const holdings = res?.data?.data;
 
     if (!Array.isArray(holdings)) {
@@ -28,11 +22,7 @@ async function getData() {
     console.error("Failed to load holdings:", err);
     throw err;
   }
-}
-
-// ==============================
-// CHART CONFIG
-// ==============================
+}
 const size = {
   width: 800,
   height: 600,
@@ -52,11 +42,7 @@ function PieCenterLabel({ children }) {
       {children}
     </StyledText>
   );
-}
-
-// ==============================
-// MAIN COMPONENT
-// ==============================
+}
 export default function BubbleChart() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,22 +55,14 @@ export default function BubbleChart() {
     }
 
     loadChart();
-  }, []);
-
-  // ==============================
-  // LOADING / EMPTY STATES
-  // ==============================
+  }, []);
   if (loading) {
     return <p className="text-center mt-4">Loading holdings...</p>;
   }
 
   if (data.length === 0) {
     return <p className="text-center mt-4">No holdings available</p>;
-  }
-
-  // ==============================
-  // RENDER
-  // ==============================
+  }
   return (
     <>
       <h3 className="mt-3 mb-4 text-center text-muted">Your Holdings</h3>

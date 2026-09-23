@@ -7,9 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Menu() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  
-  // One reference to wrap BOTH menus to handle outside clicks
+  const navigate = useNavigate();
   const menuGroupRef = useRef(null); 
 
   const { user, logout } = useAuth();
@@ -17,9 +15,7 @@ export default function Menu() {
   const handleLogout = () => {
     logout(); 
     navigate("/login");
-  };
-
-  // Close both menus if the user clicks anywhere else on the screen
+  };
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuGroupRef.current && !menuGroupRef.current.contains(e.target)) {
@@ -31,9 +27,7 @@ export default function Menu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const userInitial = user?.username ? user.username.charAt(0).toUpperCase() : "U";
-
-  // Mutually exclusive toggle functions
+  const userInitial = user?.username ? user.username.charAt(0).toUpperCase() : "U";
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
     setIsProfileOpen(false); // Force profile closed
@@ -46,7 +40,7 @@ export default function Menu() {
 
   return (
     <div className="container-fluid d-flex justify-content-between align-items-center py-2 px-3 position-relative">
-      {/* LOGO */}
+      {}
       <div className="brand-logo">
         <img
           src="/logo2.png" 
@@ -56,11 +50,11 @@ export default function Menu() {
         />
       </div>
 
-      {/* MENU + PROFILE WRAPPER */}
+      {}
       <div className="d-flex align-items-center gap-3" ref={menuGroupRef}>
         <nav className="navbar navbar-expand-lg p-0">
           
-          {/* HAMBURGER BUTTON (Removed Bootstrap data-bs attributes so React is in full control) */}
+          {}
           <button
             className="navbar-toggler border-0 shadow-none"
             type="button"
@@ -69,7 +63,7 @@ export default function Menu() {
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* DYNAMIC COLLAPSE MENU */}
+          {}
           <div className={`navbar-collapse ${isMobileMenuOpen ? "mobile-dropdown-active" : "collapse"}`}>
             <ul className="navbar-nav gap-2">
               {["Dashboard", "Orders", "Holdings", "Funds", "Charts"].map((item) => (
@@ -89,7 +83,7 @@ export default function Menu() {
           </div>
         </nav>
 
-        {/* PROFILE DROPDOWN */}
+        {}
         <div className="profile-wrapper">
           <button
             className="profile-avatar-btn"

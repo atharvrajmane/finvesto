@@ -44,15 +44,12 @@ export default function AddFundsBtn({ setCurrentFunds }) {
     }
 
     setLoading(true);
-    try {
-      // HIT THE NEW BACKEND ROUTE
+    try {
       const res = await apiClient.post("/users/balance/add", { amount });
 
       if (res?.data?.success || res?.status === 200) {
         setMsgType("success");
-        setMessage(res?.data?.message || "Funds added successfully!");
-        
-        // Extract the updated balance from the new API response structure
+        setMessage(res?.data?.message || "Funds added successfully!");
         const payload = res?.data?.data || res?.data || {};
         const newFunds = payload.balance ?? payload.fundsAvilable;
         

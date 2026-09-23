@@ -77,7 +77,7 @@ export default function Funds() {
         </div>
       )}
 
-      {/* PREMIUM CARD LAYOUT */}
+      {}
       <div className="premium-card p-0 mb-5">
         <div className="d-flex justify-content-between align-items-center p-4 border-bottom bg-light">
           <h5 className="m-0 text-dark d-flex align-items-center gap-2">
@@ -89,7 +89,7 @@ export default function Funds() {
         </div>
 
         <div className="row m-0">
-          {/* Left Column - Metrics */}
+          {}
           <div className="col-md-6 p-4 border-end">
             <div className="d-flex justify-content-between mb-3">
               <span className="text-muted">Available margin</span>
@@ -120,7 +120,7 @@ export default function Funds() {
             </div>
           </div>
 
-          {/* Right Column - Secondary Metrics */}
+          {}
           <div className="col-md-6 p-4 d-flex flex-column justify-content-center">
              <div className="d-flex justify-content-between mb-3">
               <span className="text-muted">Span</span>

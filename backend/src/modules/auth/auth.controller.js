@@ -4,19 +4,19 @@ const { success } = require("../../utils/response");
 
 const setTokenCookies = (res, accessToken, refreshToken) => {
   const isProduction = process.env.NODE_ENV === 'production';
-  
-  res.cookie('accessToken', accessToken, {
+
+    res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 15 * 60 * 1000 // 15 minutes
+    maxAge: 15 * 60 * 1000 
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000 
   });
 };
 
@@ -43,27 +43,26 @@ exports.logout = asyncWrapper(async (req, res) => {
   if (req.user && req.user._id) {
     await authService.logout(req.user._id);
   }
-  
-  res.clearCookie('accessToken');
+
+    res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
-  
-  return success(res, null, "Logout successful", 200);
+
+    return success(res, null, "Logout successful", 200);
 });
 
 exports.me = asyncWrapper(async (req, res) => {
-  // We just fetch the user's basic profile details
   const { UserModel } = require('../../models/UserModel');
   const AppError = require('../../utils/AppError');
-  
-  if (!req.user || !req.user._id) {
+
+    if (!req.user || !req.user._id) {
     throw new AppError("Unauthorized", 401);
   }
-  
-  const user = await UserModel.findById(req.user._id).select('username email balance');
-  
-  if (!user) {
+
+    const user = await UserModel.findById(req.user._id).select('username email balance');
+
+    if (!user) {
     throw new AppError("User not found", 404);
   }
-  
-  return success(res, { user: { id: user._id, username: user.username, email: user.email, balance: user.balance } }, "User verified", 200);
+
+    return success(res, { user: { id: user._id, username: user.username, email: user.email, balance: user.balance } }, "User verified", 200);
 });

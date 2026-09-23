@@ -5,8 +5,8 @@ const AppError = require('../../utils/AppError');
 class WatchlistService {
   async getUserWatchlist(userId) {
     const watchlist = await watchlistRepository.getWatchlistByUserId(userId);
-    
-    const watchlistWithStocks = await Promise.all(
+
+        const watchlistWithStocks = await Promise.all(
       watchlist.map(async (item) => {
         try {
           const stock = await stockService.getStockById(item.stockId);
@@ -28,8 +28,8 @@ class WatchlistService {
 
   async removeStock(userId, stockId) {
     const deletedItem = await watchlistRepository.removeStockFromWatchlist(userId, stockId);
-    
-    if (!deletedItem) {
+
+        if (!deletedItem) {
       throw new AppError('Stock not found in your watchlist', 404);
     }
 

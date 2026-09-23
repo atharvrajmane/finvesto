@@ -21,7 +21,6 @@ function formatError(err) {
 module.exports = function errorHandler(err, req, res, next) {
   console.error("API Error:", err.message, err.stack);
 
-  // 1.Validation Error handler
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map(e => e.message);
     const appErr = new AppError(messages.join('; '), 422, { mongoose: true });
@@ -29,7 +28,6 @@ module.exports = function errorHandler(err, req, res, next) {
     return res.status(status).json(payload);
   }
 
-  // 2. Mongoose bad ObjectId format (CastError)
   if (err.name === 'CastError') {
     const message = `Invalid ${err.path}: ${err.value}.`;
     const appErr = new AppError(message, 400);
@@ -37,7 +35,6 @@ module.exports = function errorHandler(err, req, res, next) {
     return res.status(status).json(payload);
   }
 
-  // 3. MongoDB Duplicate Key Error
   if (err.code === 11000) {
     const value = Object.values(err.keyValue)[0];
     const message = `Duplicate field value: '${value}'. Please use another value!`;
@@ -46,14 +43,12 @@ module.exports = function errorHandler(err, req, res, next) {
     return res.status(status).json(payload);
   }
 
-  // 4.Custom 422 handler
   if (err.statusCode === 422 && err.errors) {
     const appErr = new AppError(err.message || 'Validation failed', 422, { errors: err.errors });
     const { status, payload } = formatError(appErr);
     return res.status(status).json(payload);
   }
 
-  // 5.Ultimate fallback
   const appErr = err.isOperational ? err : new AppError(err.message || 'Internal Server Error', err.statusCode || 500);
   const { status, payload } = formatError(appErr);
   return res.status(status).json(payload);

@@ -16,18 +16,13 @@ export default function Summary() {
     let mounted = true;
 
     async function fetchData() {
-      try {
-        // USING YOUR EXACT REFACTORED ROUTES
+      try {
         const [fundsRes, holdingsRes] = await Promise.all([
           apiClient.get("/users/balance"), 
           apiClient.get("/portfolio")      
-        ]);
-
-        // Safely extract the balance (checks both 'balance' and old 'fundsAvilable' naming)
+        ]);
         const balancePayload = fundsRes?.data?.data || fundsRes?.data || {};
-        const fundsVal = Number(balancePayload.balance ?? balancePayload.fundsAvilable ?? 0);
-        
-        // Safely extract the portfolio array
+        const fundsVal = Number(balancePayload.balance ?? balancePayload.fundsAvilable ?? 0);
         const list = holdingsRes?.data?.data || holdingsRes?.data || [];
 
         if (mounted) {
@@ -62,9 +57,7 @@ export default function Summary() {
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-
-  // Calculate totals using REAL backend data
+    });
   const investmentNumber = holdings.reduce((acc, h) => {
     const qty = toNumberSafe(h.quantity);
     const avg = toNumberSafe(h.averageBuyPrice);
@@ -93,7 +86,7 @@ export default function Summary() {
         {loading && <LinearProgress color="primary" />}
       </Box>
 
-      {/* EQUITY SECTION */}
+      {}
       <div className="dashboard-section mb-5">
         <h5 className="section-title mb-3">Equity</h5>
         
@@ -120,7 +113,7 @@ export default function Summary() {
         </div>
       </div>
 
-      {/* HOLDINGS SECTION */}
+      {}
       <div className="dashboard-section mt-5">
         <h5 className="section-title mb-3">Holdings ({holdings.length})</h5>
         

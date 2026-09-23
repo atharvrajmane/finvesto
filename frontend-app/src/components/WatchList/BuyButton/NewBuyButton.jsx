@@ -14,9 +14,7 @@ export default function NewBuyButton({ stock }) {
   const [loading, setLoading] = useState(false);
 
   const price = Number(stock?.ltp || stock?.price || 0);
-  const maxQty = Number.isFinite(price) && price > 0 ? Math.floor(currentFunds / price) : 0;
-
-  // Generate key and open modal
+  const maxQty = Number.isFinite(price) && price > 0 ? Math.floor(currentFunds / price) : 0;
   const handleOpenModal = () => {
     setIdempotencyKey(uuidv4()); // Key is generated once per modal session
     setModalOpen(true);
@@ -54,9 +52,7 @@ export default function NewBuyButton({ stock }) {
         stockId: stock._id || stock.stockId,
         quantity: numericQty,
         price: price,
-      };
-
-      // Send the request using the PRE-GENERATED idempotencyKey
+      };
       const res = await apiClient.post("/trading/buy", payload, {
         headers: {
           'Idempotency-Key': idempotencyKey 

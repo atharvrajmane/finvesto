@@ -6,14 +6,14 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      
-    },
+
+          },
     stockId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Stock",
       required: true,
-      
-    },
+
+          },
     type: {
       type: String,
       enum: ["BUY", "SELL"],

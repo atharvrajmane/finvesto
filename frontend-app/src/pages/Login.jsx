@@ -10,9 +10,7 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  
-  // Grab the centralized login function from context
+  const navigate = useNavigate();
   const { login } = useAuth(); 
 
   const handleChange = (e) => {
@@ -26,13 +24,10 @@ export default function Login() {
     setIsError(false);
 
     try {
-      const response = await apiClient.post("/auth/login", formData);
-
-      // Extract data from response.data.data according to our backend API structure
+      const response = await apiClient.post("/auth/login", formData);
       const responsePayload = response.data?.data;
 
-      if (responsePayload && responsePayload.user) {
-        // Save user globally via AuthContext
+      if (responsePayload && responsePayload.user) {
         login(responsePayload.user);
         
         navigate("/");

@@ -32,9 +32,7 @@ export default function Holdings() {
       }
     }
 
-    fetchHoldings();
-    
-    // Auto-refresh holdings every 5 seconds
+    fetchHoldings();
     const interval = setInterval(fetchHoldings, 5000);
     
     return () => {
@@ -54,9 +52,7 @@ export default function Holdings() {
       currency: "INR",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
-
-  // Calculate Portfolio Totals
+    });
   let totalInvestment = 0;
   let totalCurrentValue = 0;
 
@@ -74,7 +70,7 @@ export default function Holdings() {
 
   return (
     <div className="summary-container mt-4 mb-3">
-      {/* HEADER */}
+      {}
       <div className="summary-header pb-3 d-flex justify-content-between align-items-center">
         <div>
           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
@@ -95,7 +91,7 @@ export default function Holdings() {
         </div>
       )}
 
-      {/* HOLDINGS TABLE */}
+      {}
       <div className="premium-card mb-5">
         <div className="table-responsive">
           <table className="table premium-table mb-0">
@@ -118,8 +114,7 @@ export default function Holdings() {
                   </td>
                 </tr>
               ) : (
-                holdings.map((holding, index) => {
-                  // 1. Extract values correctly from the new API structure
+                holdings.map((holding, index) => {
                   const qty = toNumberSafe(holding.quantity);
                   const avg = toNumberSafe(holding.averageBuyPrice);
                   const ltp = toNumberSafe(holding.stockId?.price || holding.averageBuyPrice); 
@@ -155,7 +150,7 @@ export default function Holdings() {
           </table>
         </div>
 
-        {/* PORTFOLIO FOOTER TOTALS */}
+        {}
         {holdings.length > 0 && (
           <div className="portfolio-footer bg-light p-4 border-top d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div className="d-flex gap-5 flex-wrap">

@@ -61,8 +61,6 @@ cron.schedule('* * * * *', async () => {
       await sleep(150);
     }
 
-    // Since Finnhub restricts Indian Indices (NIFTY/SENSEX) to paid subscribers,
-    // we organically simulate their movement locally here so the UI still looks alive!
     for (const indexSymbol of ['NIFTY', 'SENSEX']) {
       const simTask = (async () => {
         const doc = await StockModel.findOne({ symbol: indexSymbol });
@@ -70,8 +68,8 @@ cron.schedule('* * * * *', async () => {
           const volatility = indexSymbol === 'NIFTY' ? 50 : 150;
           const change = (Math.random() * (volatility * 2)) - volatility;
           const newPrice = Math.max(1, doc.price + change);
-          
-          await redisClient.set(`stock:${indexSymbol}:price`, newPrice, 'EX', 60);
+
+                    await redisClient.set(`stock:${indexSymbol}:price`, newPrice, 'EX', 60);
           await StockModel.updateOne(
             { symbol: indexSymbol }, 
             { price: newPrice, lastPriceUpdatedAt: new Date() }

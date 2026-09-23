@@ -25,9 +25,7 @@ export default function LeftBar() {
         let mounted = true;
 
         async function fetchMarketData() {
-            try {
-                // We use dynamic import for apiClient since it's an ES module that's usually 
-                // in standard imports, but we need to ensure the path is right for this component
+            try {
                 const { default: apiClient } = await import("../../api/apiClient.js");
                 const res = await apiClient.get("/stocks");
                 const stocks = res?.data?.data || res?.data || [];

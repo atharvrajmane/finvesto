@@ -23,8 +23,8 @@ class UserService {
     }
 
     const holdings = await portfolioRepository.getHoldingsByUserId(userId);
-    
-    const holdingsWithStocks = await Promise.all(
+
+        const holdingsWithStocks = await Promise.all(
       holdings.map(async (holding) => {
         try {
           const stock = await stockService.getStockById(holding.stockId);
@@ -35,8 +35,8 @@ class UserService {
         return holding;
       })
     );
-    
-    const totalStockValue = holdingsWithStocks.reduce((total, holding) => {
+
+        const totalStockValue = holdingsWithStocks.reduce((total, holding) => {
       const stockPrice = holding.stockId?.price || 0;
       return total + (holding.quantity * stockPrice);
     }, 0);
@@ -58,9 +58,9 @@ class UserService {
         400
       );
     }
-    
 
-    const updatedUser = await userRepository.updateUserBalance(userId, amount);
+
+        const updatedUser = await userRepository.updateUserBalance(userId, amount);
     if (!updatedUser) {
       throw new AppError("Paper trading accounts cannot exceed $1,000,000 in cash.", 400);
     }

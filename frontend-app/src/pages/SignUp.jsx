@@ -25,17 +25,12 @@ export default function SignUp() {
     setMessage("");
     setIsError(false);
 
-    try {
-      // Hits your structured backend register route
-      const response = await apiClient.post("/auth/register", formData);
-
-      // Extract the success message safely from the standard response wrapper
+    try {
+      const response = await apiClient.post("/auth/register", formData);
       const successMsg = response.data?.message || "Account created successfully!";
       
       setMessage(`${successMsg} Redirecting to login...`);
-      setIsError(false);
-
-      // Smooth redirection to let the user log in with their brand new credentials
+      setIsError(false);
       setTimeout(() => {
         navigate("/login");
       }, 2000);

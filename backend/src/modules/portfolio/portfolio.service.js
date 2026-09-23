@@ -5,8 +5,8 @@ const AppError = require("../../utils/AppError");
 class PortfolioService {
   async getUserPortfolio(userId) {
     const holdings = await portfolioRepository.getHoldingsByUserId(userId);
-    
-    const holdingsWithStocks = await Promise.all(
+
+        const holdingsWithStocks = await Promise.all(
       holdings.map(async (holding) => {
         try {
           const stock = await stockService.getStockById(holding.stockId);

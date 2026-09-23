@@ -16,8 +16,8 @@ const idempotency = async (req, res, next) => {
 
     if (!lockAcquired) {
       const cachedResponse = await redisClient.get(redisKey);
-      
-      if (cachedResponse === 'IN-PROGRESS') {
+
+            if (cachedResponse === 'IN-PROGRESS') {
         return res.status(409).json({
           success: false,
           message: 'Duplicate request is currently processing. Please wait.'

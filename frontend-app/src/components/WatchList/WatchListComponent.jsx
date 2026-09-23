@@ -4,9 +4,7 @@ import WatchListPrice from "./WatchListPrice";
 import WatchListActions from "./WatchListActions";
 
 export default function WatchListComponent({ stock, refreshWatchlist }) {
-  const [showWatchlistActions, setShowWatchlistActions] = useState(false);
-
-  // Access the nested stock data
+  const [showWatchlistActions, setShowWatchlistActions] = useState(false);
   const stockDetails = stock.stockId || {}; 
   const displayName = stockDetails.symbol || "UNKNOWN";
   

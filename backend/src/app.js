@@ -15,8 +15,6 @@ const tradingRoutes = require('./modules/trading/trading.routes');
 
 const app = express();
 
-// Trust the first reverse proxy (e.g., Render, Heroku, Nginx). 
-// This is required for express-rate-limit to correctly identify user IPs behind a proxy.
 app.set('trust proxy', 1);
 
 const cookieParser = require('cookie-parser');
@@ -24,7 +22,7 @@ const cookieParser = require('cookie-parser');
 app.use(helmet());
 app.use(
   cors({
-    origin: true, // Need to make this strict in production to allow cookies, e.g. "http://localhost:3000"
+    origin: true, 
     credentials: true,
   })
 );
@@ -36,7 +34,6 @@ require('./config/passport-config');
 
 app.use('/api/auth', authRoutes);
 
-// Apply User-Based API Limiter to all authenticated routes
 app.use('/api/', apiLimiter);
 
 app.use('/api/users', userRoutes); 
