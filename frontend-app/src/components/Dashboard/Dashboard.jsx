@@ -11,11 +11,11 @@ export default function Dashboard() {
   return (
     <div className="container-fluid ">
       <div className="row">
-        <div className="col-md-4 heightFull">
+        <div className="col-md-4 scrollable-column border-end border-bottom">
           <WatchList />
         </div>
 
-        <div className="col-md-8 border  ">
+        <div className="col-md-8 scrollable-column border-bottom">
           <Routes>
             <Route path="/" element={<Summary />} />
             <Route path="/orders" element={<Orders />} />

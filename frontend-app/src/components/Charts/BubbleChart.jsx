@@ -10,7 +10,7 @@ import apiClient from "../../api/apiClient";
 // ==============================
 async function getData() {
   try {
-    const res = await apiClient.get("/holdings");
+    const res = await apiClient.get("/portfolio");
 
     // ✅ IMPORTANT: actual array is inside res.data.data
     const holdings = res?.data?.data;
@@ -20,13 +20,13 @@ async function getData() {
       return [];
     }
 
-    return holdings.map((stock) => ({
-      label: stock.name,
-      value: stock.qty,
+    return holdings.map((holding) => ({
+      label: holding.stockId?.name || "Unknown",
+      value: holding.quantity,
     }));
-  } catch (error) {
-    console.error("Failed to load holdings:", error);
-    return [];
+  } catch (err) {
+    console.error("Failed to load holdings:", err);
+    throw err;
   }
 }
 

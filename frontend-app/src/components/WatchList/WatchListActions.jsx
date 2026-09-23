@@ -9,9 +9,7 @@ import NewSellButton from "./SellButton/NewSellButton.jsx";
 export default function WatchListActions({ stock, refreshWatchlist }) {
   let handleDelete = async (e) => {
     try {
-      await apiClient.delete("/watchlist", {
-        data: { stockName: stock.stockSymbol },
-      });
+      await apiClient.delete(`/watchlist/${stock._id}`);
       refreshWatchlist();
     } catch (error) {
       console.error("Failed to delete stock:", error);
@@ -38,11 +36,14 @@ export default function WatchListActions({ stock, refreshWatchlist }) {
             onClick={handleDelete}
             variant="contained"
             size="small"
-            style={{
+            sx={{
               background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+              color: "white",
+              minWidth: "40px",
+              padding: "4px 8px",
             }}
           >
-            <DeleteIcon />
+            <DeleteIcon fontSize="small" />
           </Button>
         </Tooltip>
       </Stack>

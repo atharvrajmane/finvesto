@@ -2,19 +2,17 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 export default function WatchListPrice({ stock }) {
+  const price = stock?.price || 0;
+
   return (
-    <div className="stockPercent d-flex">
-      <div className={stock?.isDown ? "red" : "green"}>
-        {stock?.randomNumber?.toFixed?.(2) || "N/A"}
+    <div className="stockPercent d-flex align-items-center">
+      <div className="text-success" style={{ marginRight: '8px' }}>
+        {Number(price).toLocaleString('en-IN', {
+          style: 'currency',
+          currency: 'INR'
+        })}
       </div>
-      {stock?.isDown ? (
-        <KeyboardArrowDownIcon className="red" />
-      ) : (
-        <KeyboardArrowUpIcon className="green" />
-      )}
-      <span className={(stock?.isDown ? "red " : "green ") + "small mt-1 ms-2"}>
-        {stock?.percentageDifference || "N/A"}
-      </span>
+      <span className="text-success small ms-1">0.00%</span>
     </div>
   );
 }

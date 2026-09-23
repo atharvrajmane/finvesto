@@ -1,10 +1,68 @@
-.small{
-    font-size: 12px;
-}
-.red{
-    color: rgb(242, 120, 90);
-}
-
-.green{
-    color: aquamarine;
-}
+.summary-container {
+    padding: 0 15px;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .custom-hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0));
+    margin: 20px 0;
+  }
+  
+  .section-title {
+    color: #334155;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  
+  /* Premium Card Layout */
+  .premium-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .premium-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  }
+  
+  .card-block {
+    min-width: 250px; /* Ensures they stack gracefully on mobile */
+  }
+  
+  /* Typography Enhancements */
+  .balance-display {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+  
+  .pnl-display {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  
+  .text-success {
+    color: #10b981 !important; /* Premium Green */
+  }
+  
+  .text-danger {
+    color: #ef4444 !important; /* Premium Red */
+  }
+  
+  /* Mobile Adjustments */
+  @media (max-width: 768px) {
+    .border-end {
+      border-right: none !important;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .card-block {
+      padding: 20px !important;
+    }
+  }

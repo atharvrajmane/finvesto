@@ -66,6 +66,12 @@ Thumbs.db
 # If your kite app folder is named 'kite', use this instead:
 # /kite/coverage/
 
+# Playwright Test Outputs
+/frontend-app/test-results/
+/frontend-app/playwright-report/
+/frontend-app/blob-report/
+/frontend-app/playwright/.cache/
+
 # Log files
 /frontend-landing/*.log
 /frontend-app/*.log

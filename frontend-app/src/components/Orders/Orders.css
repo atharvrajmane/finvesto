@@ -1,7 +1,103 @@
-.red{
-    color: red !important;
-}
-
-.green{
-    color: greenyellow !important;
-}
+/* Order Badges */
+.order-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  
+  .badge-buy {
+    background-color: #e6f6ec;
+    color: #10b981;
+  }
+  
+  .badge-sell {
+    background-color: #fef2f2;
+    color: #ef4444;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .status-complete {
+    background-color: #f1f5f9;
+    color: #64748b;
+  }
+  
+  .status-pending {
+    background-color: #fffbeb;
+    color: #f59e0b;
+  }
+  
+  /* Inherit Premium Table layout (in case it isn't loaded globally) */
+  .premium-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .premium-table thead th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 20px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .premium-table tbody td {
+    padding: 16px 20px;
+    vertical-align: middle;
+    color: #334155;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+  }
+  
+  .premium-table tbody tr:hover td {
+    background-color: #f8fafc;
+  }
+  
+  .premium-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .premium-table thead {
+      display: none;
+    }
+  
+    .premium-table tbody tr {
+      display: block;
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  
+    .premium-table tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 15px;
+      border: none;
+      text-align: right;
+    }
+  
+    .premium-table tbody td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #64748b;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+  }

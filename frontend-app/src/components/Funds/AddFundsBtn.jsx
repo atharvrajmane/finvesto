@@ -3,6 +3,7 @@ import { Button, Snackbar, Modal, Box, CircularProgress } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import apiClient from "../../api/apiClient";
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 export default function AddFundsBtn({ setCurrentFunds }) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -44,12 +45,17 @@ export default function AddFundsBtn({ setCurrentFunds }) {
 
     setLoading(true);
     try {
-      const res = await apiClient.post("/funds/add", { amount });
+      // HIT THE NEW BACKEND ROUTE
+      const res = await apiClient.post("/users/balance/add", { amount });
 
-      if (res?.data?.success) {
+      if (res?.data?.success || res?.status === 200) {
         setMsgType("success");
-        setMessage(res.data.message || "Funds added successfully");
-        const newFunds = res?.data?.data?.fundsAvilable;
+        setMessage(res?.data?.message || "Funds added successfully!");
+        
+        // Extract the updated balance from the new API response structure
+        const payload = res?.data?.data || res?.data || {};
+        const newFunds = payload.balance ?? payload.fundsAvilable;
+        
         if (typeof newFunds !== "undefined") {
           setCurrentFunds(Number(newFunds));
         }
@@ -78,53 +84,69 @@ export default function AddFundsBtn({ setCurrentFunds }) {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div>
       <Button
         variant="contained"
         onClick={handleModalOpen}
+        startIcon={<AccountBalanceWalletIcon />}
         sx={{
           background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
           color: "white",
           fontWeight: 600,
+          textTransform: "none",
+          padding: "8px 20px",
+          borderRadius: "8px",
+          boxShadow: "0 4px 10px rgba(48, 32, 155, 0.2)",
         }}
       >
-        ADD FUNDS
+        Add Funds
       </Button>
 
       <Modal open={modalOpen} onClose={handleModalClose}>
         <Box
           sx={{
-            width: { xs: "90%", md: "40%" },
-            padding: 3,
+            width: { xs: "90%", md: "400px" },
+            padding: 4,
             backgroundColor: "white",
-            margin: "auto",
-            marginTop: "10%",
-            borderRadius: 2,
-            boxShadow: 4,
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            borderRadius: "16px",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+            outline: "none"
           }}
         >
-          <div className="d-flex" style={{ gap: 16, alignItems: "center" }}>
+          <h5 className="fw-bold mb-1 text-dark">Add to Wallet</h5>
+          <p className="text-muted mb-4 small">Instantly increase your buying power.</p>
+          
+          <div className="d-flex flex-column" style={{ gap: 20 }}>
             <TextField
               value={funds}
               onChange={handleAddFundsChange}
               type="text"
-              label="Enter amount"
+              label="Enter amount (₹)"
+              variant="outlined"
               fullWidth
+              autoFocus
             />
             <Button
               variant="contained"
               onClick={handleButtonClick}
               disabled={loading || !funds}
+              fullWidth
               sx={{
                 background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
                 color: "white",
-                minWidth: 120,
+                padding: "12px",
+                fontWeight: "bold",
+                borderRadius: "8px"
               }}
             >
               {loading ? (
-                <CircularProgress size={20} color="inherit" />
+                <CircularProgress size={24} color="inherit" />
               ) : (
-                "Add"
+                `Add ${funds ? "₹" + funds : "Funds"}`
               )}
             </Button>
           </div>
@@ -133,11 +155,11 @@ export default function AddFundsBtn({ setCurrentFunds }) {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={msgType} sx={{ width: 1 }}>
+        <Alert onClose={handleSnackbarClose} severity={msgType} sx={{ width: 1, borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
           {message}
         </Alert>
       </Snackbar>

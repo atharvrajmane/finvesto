@@ -13,14 +13,15 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
   const [availableQty, setAvailableQty] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const price = Number(stock?.randomNumber);
+  const actualStock = stock.stockId || stock;
+  const price = Number(actualStock.price);
+  const stockIdentifier = actualStock._id || actualStock;
+  const [idempotencyKey, setIdempotencyKey] = useState(null);
 
   async function fetchAvailableQty() {
     try {
-      const res = await apiClient.post("/holdings/quantity", {
-        name: stock.stockSymbol ?? stock.name,
-      });
-      setAvailableQty(Number(res?.data?.data?.qty ?? 0));
+      const res = await apiClient.get(`/portfolio/${stockIdentifier}/quantity`);
+      setAvailableQty(Number(res?.data?.data?.quantity ?? 0));
     } catch (err) {
       console.error("fetchAvailableQty error:", err);
       setAvailableQty(0);
@@ -30,11 +31,15 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
   async function executeSellOrder() {
     const payload = {
       orderType: "SELL",
-      stockName: stock.stockSymbol ?? stock.name,
-      qty: Number(qty),
-      AveragePrice: price,
+      stockId: stockIdentifier,
+      quantity: Number(qty),
     };
-    const res = await apiClient.post("/orders/sell", payload);
+    
+    const res = await apiClient.post("/trading/sell", payload, {
+      headers: {
+        'Idempotency-Key': idempotencyKey 
+      }
+    });
     return res?.data;
   }
 
@@ -55,6 +60,7 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
   };
 
   const handleModalOpen = async () => {
+    setIdempotencyKey(crypto.randomUUID());
     await fetchAvailableQty();
     setModalOpen(true);
   };
@@ -121,13 +127,16 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
       <Button
         variant="contained"
         onClick={handleModalOpen}
-        style={{
+        size="small"
+        sx={{
           background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
           color: "white",
           fontWeight: 600,
+          minWidth: "40px",
+          padding: "4px 8px",
         }}
       >
-        ➖ S
+        S
       </Button>
 
       <Modal open={modalOpen} onClose={handleModalClose}>
@@ -140,7 +149,7 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
             marginTop: "10%",
           }}
         >
-          <h2 className="text-center text-muted">Sell {stock.stockSymbol}</h2>
+          <h2 className="text-center text-muted">Sell {actualStock.symbol}</h2>
 
           <div className="d-flex">
             <TextField
@@ -176,7 +185,7 @@ const NewSellButton = forwardRef(({ stock }, ref) => {
               {loading ? (
                 <CircularProgress size={18} color="inherit" />
               ) : (
-                `Sell ${stock.stockSymbol}`
+                `Sell ${actualStock.symbol}`
               )}
             </Button>
           </div>

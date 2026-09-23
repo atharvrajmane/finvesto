@@ -12,31 +12,56 @@ function getRandomNumber(min, max) {
 
 export default function LeftBar() {
 
-    const [niftyValue,setNiftyValue] = useState({
-        value:Math.floor(getRandomNumber(21000,25000)),
-        change:Math.floor(getRandomNumber(-100,100))
+    const [niftyValue, setNiftyValue] = useState({
+        value: 21500,
+        change: 0
     });
     const [sensexValue, setSensexValue] = useState({
-        value:Math.floor(getRandomNumber(21000,25000)),
-        change:Math.floor(getRandomNumber(-100,100))
+        value: 82000,
+        change: 0
     });
 
     useEffect(() => {
-        const intervalId = setInterval(() => {
-          setNiftyValue({
-            value: Math.floor(getRandomNumber(21000, 25000)),
-            change: Math.floor(getRandomNumber(-100, 100)),
-          });
-      
-          setSensexValue({
-            value: Math.floor(getRandomNumber(80000, 85000)),
-            change: Math.floor(getRandomNumber(-100, 100)),
-          });
-        }, 5000);
-      
-        return () => clearInterval(intervalId);
-      }, []);
-      
+        let mounted = true;
+
+        async function fetchMarketData() {
+            try {
+                // We use dynamic import for apiClient since it's an ES module that's usually 
+                // in standard imports, but we need to ensure the path is right for this component
+                const { default: apiClient } = await import("../../api/apiClient.js");
+                const res = await apiClient.get("/stocks");
+                const stocks = res?.data?.data || res?.data || [];
+
+                const niftyStock = stocks.find(s => s.symbol === "NIFTY");
+                const sensexStock = stocks.find(s => s.symbol === "SENSEX");
+
+                if (mounted) {
+                    if (niftyStock) {
+                        setNiftyValue(prev => ({
+                            value: niftyStock.price.toFixed(2),
+                            change: prev.value ? (niftyStock.price - parseFloat(prev.value)).toFixed(2) : 0
+                        }));
+                    }
+                    if (sensexStock) {
+                        setSensexValue(prev => ({
+                            value: sensexStock.price.toFixed(2),
+                            change: prev.value ? (sensexStock.price - parseFloat(prev.value)).toFixed(2) : 0
+                        }));
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch market indices:", err);
+            }
+        }
+
+        fetchMarketData();
+        const intervalId = setInterval(fetchMarketData, 5000);
+
+        return () => {
+            mounted = false;
+            clearInterval(intervalId);
+        };
+    }, []);
 
     return (
         <div className="container">

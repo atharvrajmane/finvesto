@@ -1,142 +1,133 @@
 import "./Menu.css";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-
-const logoUrl = "logo.png";
+import { useAuth } from "../../context/AuthContext"; 
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Menu() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const dropdownRef = useRef(null);
+  
+  // One reference to wrap BOTH menus to handle outside clicks
+  const menuGroupRef = useRef(null); 
 
-  let user = null;
-  try {
-    user = JSON.parse(localStorage.getItem("user"));
-  } catch {
-    user = null;
-  }
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout(); 
     navigate("/login");
   };
 
+  // Close both menus if the user clicks anywhere else on the screen
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (menuGroupRef.current && !menuGroupRef.current.contains(e.target)) {
         setIsProfileOpen(false);
+        setIsMobileMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const userInitial = user?.username ? user.username.charAt(0).toUpperCase() : "U";
+
+  // Mutually exclusive toggle functions
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    setIsProfileOpen(false); // Force profile closed
+  };
+
+  const toggleProfileMenu = () => {
+    setIsProfileOpen(!isProfileOpen);
+    setIsMobileMenuOpen(false); // Force mobile menu closed
+  };
+
   return (
-    <div className="container-fluid m-1 d-flex justify-content-between align-items-center">
+    <div className="container-fluid d-flex justify-content-between align-items-center py-2 px-3 position-relative">
       {/* LOGO */}
-      <div className="kiteogo">
+      <div className="brand-logo">
         <img
-          src="logo2.png"
-          className="img-fluid kiteLogo mt-2"
-          alt="Kite Logo"
+          src="/logo2.png" 
+          className="img-fluid"
+          alt="Finvesto Logo"
+          style={{ maxHeight: "35px" }}
         />
       </div>
 
-      {/* MENU + PROFILE */}
-      <div className="menubar d-flex align-items-center">
-        <nav className="navbar navbar-expand-lg">
-          <div className="container-fluid">
-            <button
-              className="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarNav"
-              aria-controls="navbarNav"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
-            >
-              <span className="navbar-toggler-icon"></span>
-            </button>
+      {/* MENU + PROFILE WRAPPER */}
+      <div className="d-flex align-items-center gap-3" ref={menuGroupRef}>
+        <nav className="navbar navbar-expand-lg p-0">
+          
+          {/* HAMBURGER BUTTON (Removed Bootstrap data-bs attributes so React is in full control) */}
+          <button
+            className="navbar-toggler border-0 shadow-none"
+            type="button"
+            onClick={toggleMobileMenu}
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
 
-            <div className="collapse navbar-collapse" id="navbarNav">
-              <ul className="navbar-nav">
-                <li className="nav-item">
+          {/* DYNAMIC COLLAPSE MENU */}
+          <div className={`navbar-collapse ${isMobileMenuOpen ? "mobile-dropdown-active" : "collapse"}`}>
+            <ul className="navbar-nav gap-2">
+              {["Dashboard", "Orders", "Holdings", "Funds", "Charts"].map((item) => (
+                <li className="nav-item" key={item}>
                   <NavLink
-                    to="/"
+                    to={item === "Dashboard" ? "/" : `/${item.toLowerCase()}`}
+                    onClick={() => setIsMobileMenuOpen(false)} // Close menu after clicking a link
                     className={({ isActive }) =>
-                      isActive ? "nav-link active highlightElement" : "nav-link"
+                      isActive ? "nav-link active premium-link" : "nav-link premium-link"
                     }
                   >
-                    Dashboard
+                    {item}
                   </NavLink>
                 </li>
-
-                <li className="nav-item">
-                  <NavLink
-                    to="/orders"
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active highlightElement" : "nav-link"
-                    }
-                  >
-                    Orders
-                  </NavLink>
-                </li>
-
-                <li className="nav-item">
-                  <NavLink
-                    to="/holdings"
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active highlightElement" : "nav-link"
-                    }
-                  >
-                    Holdings
-                  </NavLink>
-                </li>
-
-                <li className="nav-item">
-                  <NavLink
-                    to="/funds"
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active highlightElement" : "nav-link"
-                    }
-                  >
-                    Funds
-                  </NavLink>
-                </li>
-
-                <li className="nav-item">
-                  <NavLink
-                    to="/charts"
-                    className={({ isActive }) =>
-                      isActive ? "nav-link active highlightElement" : "nav-link"
-                    }
-                  >
-                    Charts
-                  </NavLink>
-                </li>
-              </ul>
-            </div>
+              ))}
+            </ul>
           </div>
         </nav>
 
-        <div className="profile-wrapper" ref={dropdownRef}>
+        {/* PROFILE DROPDOWN */}
+        <div className="profile-wrapper">
           <button
-            className="profile-btn"
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="profile-avatar-btn"
+            onClick={toggleProfileMenu}
           >
-            👤 {user?.username || "Profile"}
+            {userInitial}
           </button>
 
-          {isProfileOpen && (
-            <div className="profile-dropdown">
-              <div className="profile-name">{user?.username}</div>
-              <hr />
-              <button className="logout-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          )}
+          <AnimatePresence>
+            {isProfileOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="premium-dropdown"
+              >
+                <div className="dropdown-header">
+                  <div className="dropdown-avatar">{userInitial}</div>
+                  <div className="dropdown-user-info">
+                    <h6>{user?.username}</h6>
+                    <p>{user?.email}</p>
+                  </div>
+                </div>
+                <hr className="dropdown-divider" />
+                <div className="dropdown-body">
+                  <div className="wallet-balance">
+                    <span>Buying Power</span>
+                    <strong>$100,000.00</strong> 
+                  </div>
+                </div>
+                <hr className="dropdown-divider" />
+                <button className="dropdown-logout-btn" onClick={handleLogout}>
+                  Logout
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

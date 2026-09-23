@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiClient from "../api/apiClient";
+import { useAuth } from "../context/AuthContext"; 
 
 const logoUrl = "logo.png";
 
@@ -10,6 +11,9 @@ export default function Login() {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Grab the centralized login function from context
+  const { login } = useAuth(); 
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,13 +28,16 @@ export default function Login() {
     try {
       const response = await apiClient.post("/auth/login", formData);
 
-      if (response.data.token) {
-        const rawToken = response.data.token.replace("Bearer ", "");
-        localStorage.setItem("token", rawToken);
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
+      // Extract data from response.data.data according to our backend API structure
+      const responsePayload = response.data?.data;
+
+      if (responsePayload && responsePayload.user) {
+        // Save user globally via AuthContext
+        login(responsePayload.user);
+        
         navigate("/");
+      } else {
+        throw new Error("Invalid server response format");
       }
     } catch (error) {
       setIsError(true);
@@ -121,7 +128,7 @@ const styles = {
   formWrapper: {
     padding: "40px 50px",
     boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-    borderRadius: "4px",
+    borderRadius: "8px",
     backgroundColor: "#ffffff",
     width: "100%",
     maxWidth: "400px",
@@ -169,10 +176,12 @@ const styles = {
     cursor: "pointer",
     fontSize: "16px",
     fontWeight: "bold",
+    transition: "opacity 0.2s",
   },
   buttonDisabled: {
     backgroundImage: "linear-gradient(to bottom right, #5040B0, #64DFFF)",
     cursor: "not-allowed",
+    opacity: 0.7,
   },
   footerLink: {
     textAlign: "center",

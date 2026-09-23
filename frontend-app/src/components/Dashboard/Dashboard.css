@@ -1,3 +1,19 @@
-.heightFull{
-    height: 100vh;
+.scrollable-column {
+    height: calc(100vh - 80px); /* Accounts for TopBar height */
+    overflow-y: auto;
+}
+
+/* Slimmer, cleaner scrollbar */
+.scrollable-column::-webkit-scrollbar {
+    width: 6px;
+}
+.scrollable-column::-webkit-scrollbar-track {
+    background: transparent; 
+}
+.scrollable-column::-webkit-scrollbar-thumb {
+    background: #d1d5db; 
+    border-radius: 4px;
+}
+.scrollable-column::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af; 
 }

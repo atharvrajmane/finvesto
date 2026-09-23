@@ -1,92 +1,47 @@
-import React, { useState, useEffect, forwardRef } from "react";
-import { Button, Snackbar, Modal, Box, CircularProgress } from "@mui/material";
-import TextField from "@mui/material/TextField";
-import Alert from "@mui/material/Alert";
+import React, { useState, useEffect } from "react";
+import { Button, Snackbar, Modal, Box, CircularProgress, TextField, Alert } from "@mui/material";
+import { v4 as uuidv4 } from 'uuid'; // Ensure you have installed uuid: npm install uuid
 import apiClient from "../../../api/apiClient";
 
-const NewBuyButton = forwardRef(({ stock }, ref) => {
+export default function NewBuyButton({ stock }) {
   const [qty, setQty] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState(null);
   const [message, setMessage] = useState("");
   const [errorType, setErrorType] = useState("success");
   const [currentFunds, setCurrentFunds] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const price = Number(stock?.randomNumber);
-  const maxQty =
-    Number.isFinite(price) && price > 0 ? Math.floor(currentFunds / price) : 0;
+  const price = Number(stock?.ltp || stock?.price || 0);
+  const maxQty = Number.isFinite(price) && price > 0 ? Math.floor(currentFunds / price) : 0;
+
+  // Generate key and open modal
+  const handleOpenModal = () => {
+    setIdempotencyKey(uuidv4()); // Key is generated once per modal session
+    setModalOpen(true);
+  };
 
   async function getCurrentFunds() {
     try {
-      const res = await apiClient.get("/funds");
-      const payload = res?.data?.data;
-      const val = Number(payload?.fundsAvilable ?? 0);
+      const res = await apiClient.get("/users/balance");
+      const payload = res?.data?.data || res?.data || {};
+      const val = Number(payload.balance ?? payload.fundsAvilable ?? 0);
       setCurrentFunds(Number.isFinite(val) ? val : 0);
     } catch (err) {
       console.error("getCurrentFunds error:", err);
-      setCurrentFunds(0);
     }
   }
 
   useEffect(() => {
-    getCurrentFunds();
-  }, []);
-
-  async function executeBuyOrder() {
-    const numericQty = Number(qty);
-
-    const payload = {
-      orderType: "BUY",
-      stockName: stock.stockSymbol ?? stock.name,
-      qty: numericQty,
-      AveragePrice: price,
-    };
-
-    const res = await apiClient.post("/orders/buy", payload);
-    return res?.data;
-  }
-
-  const handleQty = (e) => {
-    const raw = e.target.value;
-
-    if (raw === "") {
-      setQty("");
-      return;
-    }
-
-    if (!/^\d+$/.test(raw)) return;
-
-    const numeric = Number(raw);
-    if (numeric > 0 && numeric <= maxQty) {
-      setQty(raw);
-    }
-  };
-
-  const handleSnackbarClose = (_, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
+    if (modalOpen) getCurrentFunds();
+  }, [modalOpen]);
 
   const handleButtonClick = async () => {
     const numericQty = Number(qty);
 
-    if (!Number.isFinite(price) || price <= 0) {
-      setMessage("Price not available");
-      setErrorType("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (!Number.isFinite(numericQty) || numericQty <= 0) {
-      setMessage("Enter a valid quantity");
-      setErrorType("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (numericQty > maxQty) {
-      setMessage("Insufficient funds");
+    if (numericQty <= 0 || numericQty > maxQty) {
+      setMessage(numericQty > maxQty ? "Insufficient funds" : "Enter a valid quantity");
       setErrorType("error");
       setSnackbarOpen(true);
       return;
@@ -94,112 +49,109 @@ const NewBuyButton = forwardRef(({ stock }, ref) => {
 
     setLoading(true);
     try {
-      const data = await executeBuyOrder();
-      if (data?.success) {
-        setMessage(data.message || "Buy order placed successfully");
+      const payload = {
+        orderType: "BUY",
+        stockId: stock._id || stock.stockId,
+        quantity: numericQty,
+        price: price,
+      };
+
+      // Send the request using the PRE-GENERATED idempotencyKey
+      const res = await apiClient.post("/trading/buy", payload, {
+        headers: {
+          'Idempotency-Key': idempotencyKey 
+        }
+      });
+      
+      if (res?.data?.success || res?.status === 200) {
+        setMessage("Buy order placed successfully!");
         setErrorType("success");
         setQty("");
-        await getCurrentFunds();
+        setModalOpen(false);
       } else {
-        setMessage(data?.message || "Order failed");
-        setErrorType("error");
+        throw new Error(res?.data?.message || "Order failed");
       }
     } catch (err) {
-      setMessage(
-        err?.response?.data?.message || err?.message || "Order failed"
-      );
+      setMessage(err?.response?.data?.message || err?.message || "Order failed");
       setErrorType("error");
     } finally {
       setLoading(false);
       setSnackbarOpen(true);
-      setModalOpen(false);
     }
   };
 
   return (
-    <div>
+    <>
       <Button
         variant="contained"
-        onClick={() => setModalOpen(true)}
-        style={{
-          background: "linear-gradient(to bottom right, #30209B, #24BEEB)",
+        onClick={handleOpenModal}
+        size="small"
+        sx={{
+          background: "#10b981",
           color: "white",
           fontWeight: 600,
+          minWidth: "40px",
+          padding: "4px 8px",
+          "&:hover": { background: "#059669" }
         }}
       >
-        ➕ B
+        B
       </Button>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} onClose={() => !loading && setModalOpen(false)}>
         <Box
           sx={{
-            width: 500,
-            padding: 2,
+            width: { xs: '90%', sm: 400 },
+            p: 4,
             backgroundColor: "white",
-            margin: "auto",
-            marginTop: "10%",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            borderRadius: 3,
+            boxShadow: 24,
+            outline: "none"
           }}
         >
-          <h2 className="text-center text-muted">Buy {stock.stockSymbol}</h2>
-
-          <div className="d-flex">
-            <TextField
-              type="number"
-              label="Quantity"
-              variant="outlined"
-              style={{ margin: "20px" }}
-              value={qty}
-              onChange={handleQty}
-              helperText={`Max Quantity = ${maxQty}`}
-            />
-
-            <TextField
-              label="@Market Price"
-              variant="filled"
-              value={Number.isFinite(price) ? price : "N/A"}
-              style={{ margin: "20px" }}
-              disabled
-            />
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5 className="fw-bold m-0 text-success">Buy {stock?.stockSymbol || stock?.name}</h5>
+            <span className="text-muted fw-bold">₹{price.toFixed(2)}</span>
           </div>
 
-          <div className="text-center mb-3">
-            <b>
-              Margin Available:{" "}
-              {currentFunds.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
-              })}
-            </b>
-          </div>
+          <TextField
+            type="number"
+            label="Quantity"
+            variant="outlined"
+            fullWidth
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+            helperText={`Max Qty: ${maxQty} | Available: ₹${currentFunds.toFixed(2)}`}
+            sx={{ mb: 3 }}
+            autoFocus
+          />
 
-          <div className="d-flex justify-content-center">
-            <Button
-              variant="contained"
-              onClick={handleButtonClick}
-              disabled={loading || !qty}
-            >
-              {loading ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                `Buy ${stock.stockSymbol}`
-              )}
-            </Button>
-          </div>
+          <Button
+            variant="contained"
+            onClick={handleButtonClick}
+            disabled={loading || !qty}
+            fullWidth
+            sx={{ background: "#10b981", py: 1.5, fontWeight: "bold", "&:hover": { background: "#059669" } }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Place Buy Order"}
+          </Button>
         </Box>
       </Modal>
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={2000}
-        onClose={handleSnackbarClose}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={errorType} sx={{ width: 400 }}>
+        <Alert severity={errorType} variant="filled" sx={{ width: '100%' }}>
           {message}
         </Alert>
       </Snackbar>
-    </div>
+    </>
   );
-});
-
-export default NewBuyButton;
+}

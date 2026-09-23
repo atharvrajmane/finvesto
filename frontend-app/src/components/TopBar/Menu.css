@@ -1,70 +1,183 @@
-.kiteLogo{
-    width: 35px;
-    height: 35px;
-}
-
-.highlightElement{
-    color: #30209B !important;
-    font-weight: 700 !important;
-}
-
-/* =========================
-   PROFILE DROPDOWN (THEME ALIGNED)
-========================= */
-
-.profile-wrapper {
-    position: relative;
-    margin-left: 14px;
-}
-
-.profile-btn {
-    background: none;
-    border: none;
-    font-size: 14px;
-    color: #30209B;
-    cursor: pointer;
-    padding: 6px 10px;
-    font-weight: 600;
-}
-
-.profile-btn:hover {
-    color: #24BEEB;
-}
-
-.profile-dropdown {
-    position: absolute;
-    right: 0;
-    top: 40px;
-    width: 170px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 4px 14px rgba(48, 32, 155, 0.15);
-    border-radius: 6px;
-    z-index: 1000;
-}
-
-.profile-name {
-    padding: 12px;
-    text-align: center;
-    font-weight: 600;
-    color: #30209B;
-}
-
-.profile-dropdown hr {
-    margin: 0;
-    border-color: #f0f0f0;
-}
-
-.logout-btn {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: #30209B;
+/* Navigation Links */
+.premium-link {
+    color: #666;
     font-weight: 500;
-}
-
-.logout-btn:hover {
-    background-color: #c1e7f3;
-}
+    padding: 8px 16px !important;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .premium-link:hover {
+    background-color: #f0f4f8;
+    color: #30209b;
+  }
+  
+  .premium-link.active {
+    color: #30209b !important;
+    background-color: #e6f0fa;
+    font-weight: 600;
+  }
+  
+  /* Avatar Button */
+  .profile-wrapper {
+    position: relative;
+    margin-left: 10px;
+  }
+  
+  .profile-avatar-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #30209b, #24beeb);
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(48, 32, 155, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .profile-avatar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(48, 32, 155, 0.3);
+  }
+  
+  /* =========================================
+     Profile Dropdown Menu
+     ========================================= */
+  .premium-dropdown {
+    position: absolute;
+    top: 60px; 
+    right: 0;
+    width: 280px; 
+    background: #ffffff;
+    border-radius: 14px; 
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12); 
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 1050;
+    overflow: hidden;
+  }
+  
+  .dropdown-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    padding: 24px 20px;
+    background: #f8fafc;
+    gap: 16px; 
+  }
+  
+  .dropdown-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #30209b, #24beeb);
+    color: white;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.4rem;
+    font-weight: bold;
+    flex-shrink: 0; 
+    box-shadow: 0 4px 10px rgba(48, 32, 155, 0.15);
+  }
+  
+  .dropdown-user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-align: left;
+  }
+  
+  .dropdown-user-info h6 {
+    margin: 0 0 2px 0 !important;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  
+  .dropdown-user-info p {
+    margin: 0 !important;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  .dropdown-divider {
+    margin: 0;
+    border-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .dropdown-body {
+    padding: 18px 20px;
+    background: #ffffff;
+  }
+  
+  .wallet-balance {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  
+  .wallet-balance span {
+    color: #64748b;
+    font-weight: 500;
+  }
+  
+  .wallet-balance strong {
+    color: #10b981;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  
+  .dropdown-logout-btn {
+    width: 100%;
+    padding: 16px 20px;
+    background: #ffffff;
+    border: none;
+    color: #ef4444;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+  
+  .dropdown-logout-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  
+  /* =========================================
+     Mobile Hamburger Nav Dropdown
+     ========================================= */
+  @media (max-width: 991px) {
+    .mobile-dropdown-active {
+      position: absolute;
+      top: 60px;
+      right: 60px; /* Sits right next to the avatar */
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid #eaeaea;
+      z-index: 1040;
+      min-width: 180px;
+      display: block !important;
+    }
+  
+    .mobile-dropdown-active .navbar-nav {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
